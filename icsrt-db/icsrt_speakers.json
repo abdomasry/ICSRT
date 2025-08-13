@@ -1,0 +1,29 @@
+[
+  {
+    "name": "Dr. Amina El-Far",
+    "title": "Professor of Artificial Intelligence",
+    "affiliation": "Cairo University",
+    "bio": "Dr. El-Far is a leading expert in machine learning and ethics in AI.",
+    "image": "amina-elfar.jpg",
+    "social": {
+      "linkedin": "https://linkedin.com/in/aminaelfar",
+      "twitter": "https://twitter.com/aminaelfar"
+    },
+    "conferences": [
+      "International Conference on Sustainable Research & Technology"
+    ]
+  },
+  {
+    "name": "Prof. Ahmed Mansour",
+    "title": "Dean of Engineering",
+    "affiliation": "American University of Beirut",
+    "bio": "Prof. Mansour focuses on renewable energy and sustainable design.",
+    "image": "ahmed-mansour.jpg",
+    "social": {
+      "linkedin": "https://linkedin.com/in/ahmedmansour"
+    },
+    "conferences": [
+      "Middle East Conference on Artificial Intelligence"
+    ]
+  }
+]

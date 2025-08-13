@@ -1,0 +1,26 @@
+[
+  {
+    "name": "Journal of Sustainable Technology",
+    "issn": "1234-5678",
+    "publisher": "ICSRT Publishing",
+    "scope": "Engineering and Environmental Studies",
+    "website": "https://journals.icsrt-me.com/jst",
+    "indexedIn": [
+      "Scopus",
+      "Google Scholar"
+    ],
+    "submission": "https://journals.icsrt-me.com/jst/submit"
+  },
+  {
+    "name": "Middle East Journal of AI and Data Science",
+    "issn": "8765-4321",
+    "publisher": "ICSRT Research Group",
+    "scope": "Artificial Intelligence and Data Science",
+    "website": "https://journals.icsrt-me.com/aidata",
+    "indexedIn": [
+      "DOAJ",
+      "Google Scholar"
+    ],
+    "submission": "https://journals.icsrt-me.com/aidata/submit"
+  }
+]
