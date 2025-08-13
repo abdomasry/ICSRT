@@ -25,7 +25,6 @@ import EmailVerification from './pages/EmailVerification';
 import PhoneInputDemo from './pages/PhoneInputDemo';
 import CountryCodeDemo from './pages/CountryCodeDemo';
 import PurchasePage from './pages/PurchasePage';
-import PaymobTest from './pages/PaymobTest';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import UserPayments from './pages/UserPayments';
@@ -91,7 +90,6 @@ function App() {
                   <Route path="/service-orders" element={<UserServiceOrdersNew />} />
                   <Route path="/payments" element={<UserPayments />} />
                   <Route path="/purchase/:token" element={<PurchasePage />} />
-                  <Route path="/test-payment" element={<PaymobTest />} />
                   <Route path="/services" element={<Services />} />
                   <Route path="/articles" element={<Articles />} />
                   <Route path="/about" element={<About />} />
