@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '../context/ToastContext';
+import { api } from '../lib/api';
 
 const AddSpeaker = () => {
   const navigate = useNavigate();
+  const toast = useToast();
   const [form, setForm] = useState({ name: '', title: '', image: '', country: '', bio: '' });
 
   const handleChange = (e) => {
@@ -13,20 +16,12 @@ const AddSpeaker = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:3000/api/speakers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
-      });
-      if (res.ok) {
-        alert('Speaker added successfully!');
-        navigate('/speakers');
-      } else {
-        alert('Failed to add.');
-      }
+      await api.post('/api/speakers', form);
+      toast.success('Speaker added successfully!');
+      navigate('/speakers');
     } catch (err) {
       console.error(err);
-      alert('Error occurred while adding.');
+      toast.error('Failed to add.');
     }
   };
 

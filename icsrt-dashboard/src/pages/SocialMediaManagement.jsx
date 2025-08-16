@@ -26,8 +26,11 @@ import {
   FaExclamationTriangle
 } from 'react-icons/fa';
 import { api } from '../lib/api';
+import { useToast } from '../context/ToastContext';
+import { useConfirm } from '../context/ConfirmContext';
 
 const SocialMediaManagement = () => {
+  const toast = useToast();
   const [socialLinks, setSocialLinks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -35,6 +38,7 @@ const SocialMediaManagement = () => {
   const [editingLink, setEditingLink] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
+  const confirm = useConfirm();
   // API base URL is handled by centralized api client
 
   // Form state
@@ -149,7 +153,7 @@ const SocialMediaManagement = () => {
     e.preventDefault();
     
     if (!formData.platform || !formData.url) {
-      alert('❌ Platform and URL are required');
+      toast.warning('Platform and URL are required');
       return;
     }
     
@@ -158,37 +162,36 @@ const SocialMediaManagement = () => {
       
       const id = editingLink?._id || editingLink?.id;
       const payload = { ...formData };
-      if (id) {
+  if (id) {
         await api.put(`/api/social-links/${id}`, payload);
       } else {
         await api.post('/api/social-links', payload);
       }
-      alert(`✅ Social link ${editingLink ? 'updated' : 'created'} successfully!`);
+  toast.success(`Social link ${editingLink ? 'updated' : 'created'} successfully`);
       fetchSocialLinks();
       handleCloseModal();
     } catch (error) {
       console.error('❌ Error submitting social link:', error);
-      alert(`❌ Error ${editingLink ? 'updating' : 'creating'} social link: ${error.message}`);
+  toast.error(`Error ${editingLink ? 'updating' : 'creating'} social link: ${error.message}`);
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDelete = async (linkId) => {
-    if (!window.confirm('Are you sure you want to delete this social link? This action cannot be undone.')) {
-      return;
-    }
+    const ok = await confirm({ title: 'Delete social link?', message: 'This action cannot be undone.', confirmText: 'Delete' });
+    if (!ok) return;
     
     try {
       console.log(`🗑️ Deleting social link: ${linkId}`);
       
   await api.del(`/api/social-links/${linkId}`);
   console.log('✅ Successfully deleted social link');
-  alert('✅ Social link deleted successfully!');
+  toast.success('Social link deleted successfully');
   fetchSocialLinks();
     } catch (error) {
       console.error('❌ Error deleting social link:', error);
-      alert(`❌ Error deleting social link: ${error.message}`);
+      toast.error(`Error deleting social link: ${error.message}`);
     }
   };
 
@@ -208,7 +211,7 @@ const SocialMediaManagement = () => {
   fetchSocialLinks();
     } catch (error) {
       console.error('❌ Error toggling social link:', error);
-      alert(`❌ Error updating social link: ${error.message}`);
+      toast.error(`Error updating social link: ${error.message}`);
     }
   };
 

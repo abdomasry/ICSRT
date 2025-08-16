@@ -2,11 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
+import { useToast } from '../context/ToastContext';
+import { useConfirm } from '../context/ConfirmContext';
 
 const Speakers = () => {
   const [data, setData] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const { hasPermission } = useAuth();
+  const toast = useToast();
+  const confirm = useConfirm();
 
   // Check if user has view permission for speakers
   if (!hasPermission('speakers', 'view')) {
@@ -37,14 +41,15 @@ const Speakers = () => {
   }, []);
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this speaker?')) return;
+    const ok = await confirm({ title: 'Delete speaker?', message: 'This action cannot be undone.', confirmText: 'Delete' });
+    if (!ok) return;
     try {
       await api.del(`/api/speakers/${id}`);
       setData(data.filter(item => item._id !== id));
-      alert('Speaker deleted.');
+      toast.success('Speaker deleted.');
     } catch (err) {
       console.error(err);
-      alert('Error occurred while deleting.');
+      toast.error('Error occurred while deleting.');
     }
   };
 

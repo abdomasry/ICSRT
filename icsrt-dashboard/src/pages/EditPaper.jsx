@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { apiUpload } from '../utils/api';
+import { api, API_BASE_URL } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
 const EditPaper = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { hasPermission } = useAuth();
+  const toast = useToast();
 
   // Check if user has permission to edit articles
   if (!hasPermission('papers', 'edit')) {
@@ -45,9 +48,8 @@ const EditPaper = () => {
   const [activeLangTab, setActiveLangTab] = useState('en');
 
   useEffect(() => {
-    fetch(`http://localhost:3000/api/news/${id}`)
-      .then(res => res.json())
-    .then(data => {
+    api.get(`/api/news/${id}`)
+      .then(data => {
         setForm({
           title: data.title || '',
       titleAr: data.titleAr || '',
@@ -76,24 +78,16 @@ const EditPaper = () => {
     setIsLoading(true);
     
     try {
-      const res = await fetch(`http://localhost:3000/api/news/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...form,
-          type: 'article',
-          updatedAt: new Date().toISOString()
-        })
+      await api.put(`/api/news/${id}`, {
+        ...form,
+        type: 'article',
+        updatedAt: new Date().toISOString()
       });
-      if (res.ok) {
-        alert('Article updated successfully!');
+        toast.success('Article updated successfully!');
         navigate('/papers');
-      } else {
-        alert('Failed to update article.');
-      }
     } catch (err) {
       console.error(err);
-      alert('An error occurred while updating.');
+      toast.error('An error occurred while updating.');
     } finally {
       setIsLoading(false);
     }
@@ -104,11 +98,11 @@ const EditPaper = () => {
     if (!file) return;
     try {
       setUploading(true);
-      const result = await apiUpload('http://localhost:3000/api/upload', file);
+  const result = await apiUpload(`${API_BASE_URL}/api/upload`, file);
       setForm(prev => ({ ...prev, image: result.url }));
     } catch (err) {
       console.error('Upload error:', err);
-      alert('Image upload failed. Please try a smaller image (max 5MB).');
+      toast.error('Image upload failed. Please try a smaller image (max 5MB).');
     } finally {
       setUploading(false);
     }

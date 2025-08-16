@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../lib/api';
+import { useToast } from '../context/ToastContext';
+import { useConfirm } from '../context/ConfirmContext';
 
 const Roles = () => {
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const toast = useToast();
+  const confirm = useConfirm();
 
   useEffect(() => {
     fetchRoles();
@@ -23,20 +27,15 @@ const Roles = () => {
   };
 
   const deleteRole = async (id) => {
-    if (window.confirm('Are you sure you want to delete this role?')) {
-      try {
-  const response = await api.del(`/api/roles/${id}`);
-
-  if (response && (response.ok || response.success !== false)) {
-          setRoles(roles.filter(role => role._id !== id));
-          alert('Role deleted successfully!');
-        } else {
-          alert('Failed to delete role');
-        }
-      } catch (error) {
-        console.error('Error deleting role:', error);
-        alert('Error deleting role');
-      }
+    const ok = await confirm({ title: 'Delete role?', message: 'This action cannot be undone.', confirmText: 'Delete' });
+    if (!ok) return;
+    try {
+      await api.del(`/api/roles/${id}`);
+      setRoles(roles.filter(role => role._id !== id));
+      toast.success('Role deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting role:', error);
+      toast.error('Error deleting role');
     }
   };
 

@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaSave, FaTimes } from 'react-icons/fa';
 import { api } from '../lib/api';
+import { useToast } from '../context/ToastContext';
 
 const EditServiceOrder = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const toast = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -72,9 +74,8 @@ const EditServiceOrder = () => {
       console.log('Submitting updated service order:', updateData);
 
   const result = await api.put(`/api/service-orders/${id}`, updateData);
-      console.log('Service order updated successfully:', result);
-
-      alert('Service order updated successfully!');
+  console.log('Service order updated successfully:', result);
+  toast.success('Service order updated successfully!');
       navigate(`/service-orders/view/${id}`);
     } catch (err) {
       console.error('Error updating service order:', err);

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { api } from '../lib/api';
 
 const UserContext = createContext();
 
@@ -27,6 +28,34 @@ export const UserProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
+  // Auto-enrich stored user if important fields are missing (e.g., userType)
+  useEffect(() => {
+    const enrich = async () => {
+      try {
+        if (!user || !user._id) return;
+        // Avoid repeated enrichment
+        if (user.__enriched) return;
+        // If userType is missing, fetch full user profile from API
+        if (!user.userType) {
+          const resp = await api.getSafe(`/api/users/${user._id}`);
+          if (resp.ok && resp.data) {
+            const merged = { ...user, ...resp.data, __enriched: true };
+            setUser(merged);
+            localStorage.setItem('icsrtUser', JSON.stringify(merged));
+          } else {
+            // Mark as checked to avoid loops even if API fails
+            const flagged = { ...user, __enriched: true };
+            setUser(flagged);
+            localStorage.setItem('icsrtUser', JSON.stringify(flagged));
+          }
+        }
+      } catch (e) {
+        // Non-fatal: just skip enrichment
+      }
+    };
+    enrich();
+  }, [user]);
+
   const login = (userData, userToken) => {
     setUser(userData);
     setToken(userToken);
@@ -42,8 +71,21 @@ export const UserProvider = ({ children }) => {
   };
 
   const updateUser = (updatedUserData) => {
-    setUser(updatedUserData);
-    localStorage.setItem('icsrtUser', JSON.stringify(updatedUserData));
+    // Merge to preserve stable fields (token stored separately), and flags like __enriched
+    setUser(prev => {
+      const merged = { ...(prev || {}), ...(updatedUserData || {}) };
+      localStorage.setItem('icsrtUser', JSON.stringify(merged));
+      return merged;
+    });
+  };
+
+  // Optional: refetch user by id and update context
+  const refreshUser = async () => {
+    try {
+      if (!user?._id) return;
+      const resp = await api.getSafe(`/api/users/${user._id}`);
+      if (resp.ok && resp.data) updateUser({ ...resp.data, __enriched: true });
+    } catch {}
   };
 
   const value = {
@@ -52,7 +94,8 @@ export const UserProvider = ({ children }) => {
     loading,
     login,
     logout,
-    updateUser,
+  updateUser,
+  refreshUser,
     isLoggedIn: !!user
   };
 

@@ -449,8 +449,8 @@ const PhoneInput = ({
         </div>
       )}
 
-      {/* Custom CSS for scrollbar */}
-      <style jsx>{`
+  {/* Custom CSS for scrollbar */}
+  <style>{`
         .custom-scrollbar {
           scrollbar-width: thin;
           scrollbar-color: #cbd5e0 #f7fafc;
@@ -481,7 +481,7 @@ const PhoneInput = ({
         .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
           background: #718096;
         }
-      `}</style>
+  `}</style>
     </div>
   );
 };

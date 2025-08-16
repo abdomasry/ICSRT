@@ -18,8 +18,10 @@ import {
   FaSpinner
 } from 'react-icons/fa';
 import Pagination from '../components/Pagination';
+import { useToast } from '../context/ToastContext';
 
 const TicketsManagement = () => {
+  const toast = useToast();
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -80,7 +82,7 @@ const TicketsManagement = () => {
 
   const submitResponse = async () => {
     if (!responseMessage.trim()) {
-      alert('Please enter a response message');
+  toast.warning('Please enter a response message');
       return;
     }
 
@@ -93,16 +95,16 @@ const TicketsManagement = () => {
       });
 
       if (data?.success) {
-        alert('✅ Response sent successfully!');
+        toast.success('Response sent successfully');
         setResponseMessage('');
         fetchTickets(); // Refresh tickets
         setShowModal(false);
       } else {
-        alert(`❌ Failed to send response: ${data?.error || 'Unknown error'}`);
+        toast.error(`Failed to send response: ${data?.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error submitting response:', error);
-      alert(`❌ Error sending response: ${error.message}`);
+      toast.error(`Error sending response: ${error.message}`);
     } finally {
       setSubmittingResponse(false);
     }
@@ -141,14 +143,14 @@ const TicketsManagement = () => {
       console.log('📄 Response data:', data);
 
       if (data?.success) {
-        alert(`✅ Ticket ${newStatus === 'resolved' ? 'resolved' : newStatus === 'closed' ? 'closed' : 'status updated'} successfully`);
+        toast.success(`Ticket ${newStatus === 'resolved' ? 'resolved' : newStatus === 'closed' ? 'closed' : 'status updated'} successfully`);
         fetchTickets(); // Refresh tickets
         if (selectedTicket && selectedTicket._id === ticketId) {
           setShowModal(false);
         }
       } else {
         console.error('❌ API returned error:', data);
-        alert(`❌ Failed to update status: ${data?.error || data?.message || 'Unknown error'}`);
+        toast.error(`Failed to update status: ${data?.error || data?.message || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('❌ Error updating ticket status:', error);
@@ -159,11 +161,11 @@ const TicketsManagement = () => {
       
       // More specific error messages
       if (error.message.includes('Failed to fetch')) {
-        alert('❌ Cannot connect to server. Please check:\n1. Server is running\n2. No firewall blocking the connection');
+        toast.error('Cannot connect to server. Please check: 1) Server is running 2) No firewall blocking the connection');
       } else if (error.message.includes('CORS')) {
-        alert(`❌ CORS error: Server needs to allow requests from this domain`);
+        toast.error('CORS error: Server needs to allow requests from this domain');
       } else {
-        alert(`❌ Error updating status: ${error.message}`);
+        toast.error(`Error updating status: ${error.message}`);
       }
     }
   };
@@ -304,7 +306,13 @@ const TicketsManagement = () => {
 
       {/* Modern Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-        <div className="bg-white/80 backdrop-blur-lg rounded-xl border border-white/20 shadow-lg p-6 relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+        <div
+          className={`bg-white/80 backdrop-blur-lg rounded-xl border border-white/20 shadow-lg p-6 relative overflow-hidden group hover:shadow-xl transition-all duration-300 cursor-pointer ${filterStatus==='all' ? 'ring-2 ring-blue-300' : ''}`}
+          onClick={() => { setFilterStatus('all'); setPage(1); }}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { setFilterStatus('all'); setPage(1); } }}
+        >
           <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <div className="relative z-10 text-center">
             <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-1">
@@ -315,7 +323,13 @@ const TicketsManagement = () => {
           </div>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-lg rounded-xl border border-white/20 shadow-lg p-6 relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+        <div
+          className={`bg-white/80 backdrop-blur-lg rounded-xl border border-white/20 shadow-lg p-6 relative overflow-hidden group hover:shadow-xl transition-all duration-300 cursor-pointer ${filterStatus==='open' ? 'ring-2 ring-blue-300' : ''}`}
+          onClick={() => { setFilterStatus('open'); setPage(1); }}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { setFilterStatus('open'); setPage(1); } }}
+        >
           <div className="absolute inset-0 bg-gradient-to-br from-yellow-50/50 to-orange-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <div className="relative z-10 text-center">
             <div className="text-3xl font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent mb-1">
@@ -326,7 +340,13 @@ const TicketsManagement = () => {
           </div>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-lg rounded-xl border border-white/20 shadow-lg p-6 relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+        <div
+          className={`bg-white/80 backdrop-blur-lg rounded-xl border border-white/20 shadow-lg p-6 relative overflow-hidden group hover:shadow-xl transition-all duration-300 cursor-pointer ${filterStatus==='in_progress' ? 'ring-2 ring-blue-300' : ''}`}
+          onClick={() => { setFilterStatus('in_progress'); setPage(1); }}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { setFilterStatus('in_progress'); setPage(1); } }}
+        >
           <div className="absolute inset-0 bg-gradient-to-br from-purple-50/50 to-indigo-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <div className="relative z-10 text-center">
             <div className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mb-1">
@@ -337,7 +357,13 @@ const TicketsManagement = () => {
           </div>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-lg rounded-xl border border-white/20 shadow-lg p-6 relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+        <div
+          className={`bg-white/80 backdrop-blur-lg rounded-xl border border-white/20 shadow-lg p-6 relative overflow-hidden group hover:shadow-xl transition-all duration-300 cursor-pointer ${filterStatus==='resolved' ? 'ring-2 ring-blue-300' : ''}`}
+          onClick={() => { setFilterStatus('resolved'); setPage(1); }}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { setFilterStatus('resolved'); setPage(1); } }}
+        >
           <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/50 to-green-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <div className="relative z-10 text-center">
             <div className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent mb-1">
@@ -348,7 +374,13 @@ const TicketsManagement = () => {
           </div>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-lg rounded-xl border border-white/20 shadow-lg p-6 relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+        <div
+          className={`bg-white/80 backdrop-blur-lg rounded-xl border border-white/20 shadow-lg p-6 relative overflow-hidden group hover:shadow-xl transition-all duration-300 cursor-pointer ${filterStatus==='closed' ? 'ring-2 ring-blue-300' : ''}`}
+          onClick={() => { setFilterStatus('closed'); setPage(1); }}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { setFilterStatus('closed'); setPage(1); } }}
+        >
           <div className="absolute inset-0 bg-gradient-to-br from-gray-50/50 to-slate-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <div className="relative z-10 text-center">
             <div className="text-3xl font-bold bg-gradient-to-r from-gray-600 to-slate-600 bg-clip-text text-transparent mb-1">

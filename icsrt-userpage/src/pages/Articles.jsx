@@ -255,11 +255,13 @@ const Articles = () => {
                         )}
                       </div>
                       
-                      <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3 line-clamp-2 hover:text-blue-600 transition-colors">
-                        {isRTL ? article.titleAr || article.title : article.title}
-                      </h3>
+                      <Link to={`/articles/${article._id || article.id || index}`}>
+                        <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3 line-clamp-2 break-words hover:text-blue-600 transition-colors">
+                          {isRTL ? article.titleAr || article.title : article.title}
+                        </h3>
+                      </Link>
                       
-                      <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-3 leading-relaxed">
+                      <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-3 leading-relaxed break-words overflow-x-hidden">
                         {isRTL ? article.excerptAr || article.excerpt || article.descriptionAr || article.description || article.abstract 
                                : article.excerpt || article.description || article.abstract}
                       </p>
@@ -275,14 +277,8 @@ const Articles = () => {
                       )}
                       
                       <div className="flex justify-between items-center">
-                        <button className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-semibold transition-colors">
+                        <Link to={`/articles/${article._id || article.id || index}`} className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-semibold transition-colors">
                           {t('articles.read.more')} {isRTL ? '←' : '→'}
-                        </button>
-                        <Link 
-                          to="/services"
-                          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors text-sm"
-                        >
-                          {isRTL ? 'طلب الخدمة' : 'Get Service'}
                         </Link>
                       </div>
                     </div>

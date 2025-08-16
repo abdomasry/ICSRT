@@ -19,6 +19,8 @@ const linkItems = [
   { name: 'contact-requests', icon: <FaEnvelope />, label: 'Contact Messages' },
   { name: 'tickets', icon: <FaTicketAlt />, label: 'Support Tickets' },
   { name: 'social-media', icon: <FaShareAlt />, label: 'Social Media' },
+  // Researcher collaborations management
+  { name: 'collaborations', icon: <FaClipboardList />, label: 'Collaborations' },
   { name: 'about', icon: <FaInfoCircle />, label: 'About' },
   { name: 'mission', icon: <FaInfoCircle />, label: 'Mission' },
   { name: 'vision', icon: <FaEye />, label: 'Vision' }
@@ -134,15 +136,6 @@ const Sidebar = () => {
                 <p className="text-xs text-gray-600 capitalize">
                   {user?.type === 'super_admin' ? 'Super Administrator' : (user?.role_data?.name || user?.type?.replace('_', ' ') || 'Administrator')}
                 </p>
-                {/* Debug info (dev only) */}
-                {isDev && (
-                  <details className="mt-2">
-                    <summary className="text-xs text-blue-600 cursor-pointer">Debug User Data</summary>
-                    <div className="text-xs text-gray-700 mt-1 bg-gray-100 p-2 rounded max-h-32 overflow-auto">
-                      <pre>{JSON.stringify(user, null, 2)}</pre>
-                    </div>
-                  </details>
-                )}
               </div>
               <button
                 onClick={handleLogout}

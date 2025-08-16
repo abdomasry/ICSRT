@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { FaUsers, FaClipboardList, FaCog, FaFileAlt, FaBook, FaCalendarAlt, FaNewspaper, FaQuestionCircle, FaComments, FaEye, FaClock, FaChartLine, FaPlus, FaEdit, FaTrash, FaDownload, FaSync } from 'react-icons/fa';
 import RecentActivity from '../components/RecentActivity';
 import { api } from '../lib/api';
+import { useToast } from '../context/ToastContext';
 
 const Dashboard = () => {
+  const toast = useToast();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -37,8 +39,17 @@ const Dashboard = () => {
     fetchStats(true);
   };
 
-  const StatCard = ({ title, count, icon, color, description, trend, isLarge = false }) => (
-    <div className={`bg-white shadow-lg rounded-xl p-6 border-l-4 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1`} style={{ borderLeftColor: color }}>
+  const StatCard = ({ title, count, icon, color, description, trend, isLarge = false, onClick }) => (
+    <div
+      className={`bg-white shadow-lg rounded-xl p-6 border-l-4 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 ${onClick ? 'cursor-pointer' : ''}`}
+      style={{ borderLeftColor: color }}
+      onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={(e) => {
+        if (onClick && (e.key === 'Enter' || e.key === ' ')) onClick();
+      }}
+    >
       <div className="flex items-center justify-between">
         <div className="flex-1">
           <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
@@ -242,6 +253,56 @@ const Dashboard = () => {
           </div>
         </div>
 
+          {/* Research Collaborations */}
+          <div className="mb-8">
+            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+              <FaFileAlt className="mr-2 text-purple-600" />
+              Research Collaborations
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <StatCard
+                title="Total"
+                count={stats?.totalCollaborations}
+                icon={<FaFileAlt />}
+                color="#6B7280"
+                description="All submissions"
+                onClick={() => (window.location.href = '/collaborations?status=all')}
+              />
+              <StatCard
+                title="Submitted"
+                count={stats?.collaborationsSubmitted}
+                icon={<FaFileAlt />}
+                color="#3B82F6"
+                description="Awaiting review"
+                onClick={() => (window.location.href = '/collaborations?status=submitted')}
+              />
+              <StatCard
+                title="In Review"
+                count={stats?.collaborationsReview}
+                icon={<FaEye />}
+                color="#06B6D4"
+                description="Under evaluation"
+                onClick={() => (window.location.href = '/collaborations?status=review')}
+              />
+              <StatCard
+                title="Approved"
+                count={stats?.collaborationsApproved}
+                icon={<FaClipboardList />}
+                color="#10B981"
+                description="Accepted"
+                onClick={() => (window.location.href = '/collaborations?status=approved')}
+              />
+              <StatCard
+                title="Rejected"
+                count={stats?.collaborationsRejected}
+                icon={<FaClipboardList />}
+                color="#EF4444"
+                description="Declined"
+                onClick={() => (window.location.href = '/collaborations?status=rejected')}
+              />
+            </div>
+          </div>
+
         {/* Platform Content Stats (Gallery removed) */}
         <div className="mb-8">
           <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
@@ -431,7 +492,7 @@ const Dashboard = () => {
               description="Download system reports, user data, and analytics"
               icon={<FaDownload />}
               color="#F97316"
-              onClick={() => alert('Export functionality: Choose data type to export')}
+              onClick={() => toast.info('Export coming soon: choose data type to export')}
             />
           </div>
         </div>

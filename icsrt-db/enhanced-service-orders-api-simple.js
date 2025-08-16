@@ -9,25 +9,30 @@ function addEnhancedServiceOrdersAPI(app, connectDB) {
     console.log("📋 Enhanced service orders request received");
     try {
       const database = await connectDB();
-      const { page = 1, limit = 50, status, search, sortBy = 'submittedAt', sortOrder = 'desc' } = req.query;
-      
-      let query = {};
-      
-      // Filter by status if provided
-      if (status && status !== 'all') {
-        query.status = status;
-      }
-      
+      const { page = 1, limit = 50, status, search, serviceType, sortBy = 'submittedAt', sortOrder = 'desc' } = req.query;
+
+      // Build a baseQuery that respects search/serviceType but NOT status
+      const baseQuery = {};
+
       // Enhanced search functionality
       if (search) {
-        query.$or = [
+        baseQuery.$or = [
           { orderNumber: { $regex: search, $options: 'i' } },
           { serviceName: { $regex: search, $options: 'i' } },
+          { serviceType: { $regex: search, $options: 'i' } },
           { userEmail: { $regex: search, $options: 'i' } },
           { 'customerInfo.name': { $regex: search, $options: 'i' } },
           { 'customerInfo.organization': { $regex: search, $options: 'i' } }
         ];
       }
+
+      // Optional serviceType filter
+      if (serviceType && serviceType !== 'all') {
+        baseQuery.serviceType = serviceType;
+      }
+
+      // List query applies the selected status (if any) on top of base filters
+      const listQuery = { ...baseQuery, ...(status && status !== 'all' ? { status } : {}) };
       
       const sortOptions = {};
       sortOptions[sortBy] = sortOrder === 'desc' ? -1 : 1;
@@ -36,7 +41,7 @@ function addEnhancedServiceOrdersAPI(app, connectDB) {
       
       // Get orders with enhanced customer info
       const orders = await database.collection('service-orders')
-        .find(query)
+        .find(listQuery)
         .sort(sortOptions)
         .skip(skip)
         .limit(parseInt(limit))
@@ -96,23 +101,40 @@ function addEnhancedServiceOrdersAPI(app, connectDB) {
         };
       }));
       
-      const total = await database.collection('service-orders').countDocuments(query);
-      
+      // Totals for the current list (respecting selected status)
+      const totalList = await database.collection('service-orders').countDocuments(listQuery);
+
+      // Base totals by status using a single aggregation to avoid race/off-by-one
+      const agg = await database.collection('service-orders').aggregate([
+        { $match: baseQuery },
+        { $group: { _id: '$status', n: { $sum: 1 } } }
+      ]).toArray();
+      const counts = { pending: 0, confirmed: 0, 'in-progress': 0, 'ready-for-payment': 0, completed: 0, cancelled: 0 };
+      let totalBase = 0;
+      for (const row of agg) {
+        const key = row._id || 'unknown';
+        if (counts[key] != null) counts[key] = row.n;
+        totalBase += row.n;
+      }
+
       res.json({
         success: true,
         orders: enhancedOrders,
         pagination: {
           currentPage: parseInt(page),
-          totalPages: Math.ceil(total / parseInt(limit)),
-          totalItems: total,
+          totalPages: Math.ceil(totalList / parseInt(limit)),
+          totalItems: totalList,
           itemsPerPage: parseInt(limit)
         },
+        // Stats that reflect base filters (search/serviceType) but not the selected status
         stats: {
-          totalOrders: total,
-          pendingOrders: await database.collection('service-orders').countDocuments({ status: 'pending' }),
-          inProgressOrders: await database.collection('service-orders').countDocuments({ status: 'in-progress' }),
-          completedOrders: await database.collection('service-orders').countDocuments({ status: 'completed' }),
-          cancelledOrders: await database.collection('service-orders').countDocuments({ status: 'cancelled' })
+          total: totalBase,
+          pending: counts['pending'] || 0,
+          confirmed: counts['confirmed'] || 0,
+          inProgress: counts['in-progress'] || 0,
+          readyForPayment: counts['ready-for-payment'] || 0,
+          completed: counts['completed'] || 0,
+          cancelled: counts['cancelled'] || 0
         }
       });
     } catch (error) {

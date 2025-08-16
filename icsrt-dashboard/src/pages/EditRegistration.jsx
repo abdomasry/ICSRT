@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useToast } from '../context/ToastContext';
+import { api } from '../lib/api';
 
 const EditRegistration = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const toast = useToast();
   const [form, setForm] = useState({
     fullName: '',
     email: '',
@@ -15,8 +18,7 @@ const EditRegistration = () => {
   });
 
   useEffect(() => {
-    fetch(`http://localhost:3000/api/registrations/${id}`)
-      .then(res => res.json())
+    api.get(`/api/registrations/${id}`)
       .then(setForm)
       .catch(err => console.error('Fetch error:', err));
   }, [id]);
@@ -30,21 +32,12 @@ const EditRegistration = () => {
     e.preventDefault();
 
     try {
-      const res = await fetch(`http://localhost:3000/api/registrations/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
-      });
-
-      if (res.ok) {
-        alert('Registration updated successfully!');
+      await api.put(`/api/registrations/${id}`, form);
+        toast.success('Registration updated successfully!');
         navigate('/registrations');
-      } else {
-        alert('Failed to update registration.');
-      }
     } catch (err) {
       console.error(err);
-      alert('An error occurred while updating.');
+      toast.error('An error occurred while updating.');
     }
   };
 

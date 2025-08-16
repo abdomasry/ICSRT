@@ -15,6 +15,13 @@
 			"command": "npm start",
 			"isBackground": true,
 			"group": "build"
+		},
+		{
+			"label": "Start Dashboard Server",
+			"type": "shell",
+			"command": "npm start",
+			"isBackground": true,
+			"group": "build"
 		}
 	]
 }

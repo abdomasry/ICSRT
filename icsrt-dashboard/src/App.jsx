@@ -50,6 +50,9 @@ import ContactRequests from "./pages/ContactRequests";
 import TicketsManagement from "./pages/TicketsManagement";
 import SocialMediaManagement from "./pages/SocialMediaManagement";
 import { api } from './lib/api';
+import { ToastProvider } from './context/ToastContext';
+import { ConfirmProvider } from './context/ConfirmContext';
+import Collaborations from "./pages/Collaborations";
 
 // Main App Component with Authentication
 const AppContent = () => {
@@ -112,6 +115,7 @@ const AppContent = () => {
         <Route path="newsletter-subscribers" element={<NewsletterSubscribers />} />
   <Route path="coupons" element={<Coupons />} />
         <Route path="home" element={<Home />} />
+  <Route path="collaborations" element={<Collaborations />} />
       </Route>
       
       {/* Catch all route - redirect to dashboard */}
@@ -134,7 +138,11 @@ function App() {
 
   return (
     <AuthProvider>
-      <AppContent />
+      <ToastProvider>
+        <ConfirmProvider>
+          <AppContent />
+        </ConfirmProvider>
+      </ToastProvider>
     </AuthProvider>
   );
 }

@@ -13,6 +13,9 @@ const Services = () => {
   const [searchParams] = useSearchParams();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
+  // Modal state for service details
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [selectedService, setSelectedService] = useState(null);
   
   // Service request form state
   const [requestForm, setRequestForm] = useState({
@@ -59,6 +62,29 @@ const Services = () => {
         setServices([]);
       });
   }, [searchParams]);
+
+  // Open/close service details modal
+  const openServiceDetails = (svc) => {
+    // Normalize a minimal service object
+    const normalized = svc || {};
+    setSelectedService(normalized);
+    setIsDetailsOpen(true);
+  };
+
+  const closeServiceDetails = () => {
+    setIsDetailsOpen(false);
+    // Delay clearing to allow close animation (if any)
+    setTimeout(() => setSelectedService(null), 150);
+  };
+
+  // Close modal on ESC
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape') closeServiceDetails();
+    };
+    if (isDetailsOpen) window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isDetailsOpen]);
 
   const handleRequestFormChange = (e) => {
     setRequestForm({ ...requestForm, [e.target.name]: e.target.value });
@@ -213,7 +239,14 @@ const Services = () => {
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {services.length > 0 ? services.map((service, index) => (
-              <div key={service._id || index} className={`bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all hover:-translate-y-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+              <div
+                key={service._id || index}
+                className={`bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all hover:-translate-y-1 ${isRTL ? 'text-right' : 'text-left'}`}
+                role="button"
+                tabIndex={0}
+                onClick={() => openServiceDetails(service)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openServiceDetails(service); } }}
+              >
                 {/* Service Image */}
                 <div className="h-48 overflow-hidden relative">
                   <img 
@@ -243,7 +276,7 @@ const Services = () => {
                     {isRTL ? service.titleAr || service.title || service.name : service.title || service.name}
                   </h3>
                   
-                  <p className="text-gray-600 dark:text-gray-300 mb-4 text-center leading-relaxed text-sm">
+                  <p className="text-gray-600 dark:text-gray-300 mb-4 text-center leading-relaxed text-sm break-words overflow-x-hidden line-clamp-4">
                     {isRTL ? service.descriptionAr || service.description : service.description}
                   </p>
                   
@@ -265,7 +298,7 @@ const Services = () => {
                   )}
                   
                   <button 
-                    onClick={() => handleServiceRequest(service.title || service._id || service.key || 'consultation')}
+                    onClick={(e) => { e.stopPropagation(); handleServiceRequest(service.title || service._id || service.key || 'consultation'); }}
                     className="w-full bg-gradient-to-r from-blue-600 to-blue-400 text-white py-2.5 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-500 transition-all transform hover:scale-105 text-sm"
                   >
                     {service.buttonText || t('services.request') || 'Request Service'}
@@ -277,7 +310,25 @@ const Services = () => {
               <div className="col-span-full">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                   {/* Research & Assignments Service */}
-                  <div className={`bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-shadow ${isRTL ? 'text-right' : 'text-left'}`}>
+                  <div
+                    className={`bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-shadow ${isRTL ? 'text-right' : 'text-left'}`}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => openServiceDetails({
+                      title: t('services.research.title'),
+                      description: t('services.research.desc'),
+                      features: [
+                        isRTL ? 'كتابة مهنية' : 'Professional Writing',
+                        isRTL ? 'جميع التخصصات' : 'All Specializations',
+                        isRTL ? 'أسس علمية' : 'Scientific Foundation',
+                        isRTL ? 'جودة مضمونة' : 'Quality Assured'
+                      ],
+                      image: undefined
+                    })}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openServiceDetails({
+                      title: t('services.research.title'), description: t('services.research.desc')
+                    }); } }}
+                  >
                     <div className="text-6xl mb-6 text-center">📝</div>
                     <h3 className="text-2xl font-bold text-blue-800 dark:text-blue-400 mb-4 text-center">
                       {t('services.research.title')}
@@ -299,7 +350,7 @@ const Services = () => {
                       ))}
                     </div>
                     <button 
-                      onClick={() => handleServiceRequest('research')}
+                      onClick={(e) => { e.stopPropagation(); handleServiceRequest('research'); }}
                       className="w-full bg-gradient-to-r from-blue-600 to-blue-400 dark:from-blue-700 dark:to-blue-500 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-500 dark:hover:from-blue-600 dark:hover:to-blue-400 transition"
                     >
                       {t('services.request')}
@@ -307,7 +358,22 @@ const Services = () => {
                   </div>
 
                   {/* Translation Services */}
-                  <div className={`bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-shadow ${isRTL ? 'text-right' : 'text-left'}`}>
+                  <div
+                    className={`bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-shadow ${isRTL ? 'text-right' : 'text-left'}`}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => openServiceDetails({
+                      title: t('services.translation.title'),
+                      description: t('services.translation.desc'),
+                      features: [
+                        isRTL ? 'جميع اللغات' : 'All Languages',
+                        isRTL ? 'مترجمون محترفون' : 'Professional Translators',
+                        isRTL ? 'تركيز أكاديمي' : 'Academic Focus',
+                        isRTL ? 'تسليم سريع' : 'Quick Delivery'
+                      ]
+                    })}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openServiceDetails({ title: t('services.translation.title'), description: t('services.translation.desc') }); } }}
+                  >
                     <div className="text-6xl mb-6 text-center">🌐</div>
                     <h3 className="text-2xl font-bold text-blue-800 dark:text-blue-400 mb-4 text-center">
                       {t('services.translation.title')}
@@ -329,7 +395,7 @@ const Services = () => {
                       ))}
                     </div>
                     <button 
-                      onClick={() => handleServiceRequest('translation')}
+                      onClick={(e) => { e.stopPropagation(); handleServiceRequest('translation'); }}
                       className="w-full bg-gradient-to-r from-blue-600 to-blue-400 dark:from-blue-700 dark:to-blue-500 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-500 dark:hover:from-blue-600 dark:hover:to-blue-400 transition"
                     >
                       {t('services.request')}
@@ -337,7 +403,22 @@ const Services = () => {
                   </div>
 
                   {/* Graduation Projects */}
-                  <div className={`bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-shadow ${isRTL ? 'text-right' : 'text-left'}`}>
+                  <div
+                    className={`bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-shadow ${isRTL ? 'text-right' : 'text-left'}`}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => openServiceDetails({
+                      title: t('services.graduation.title'),
+                      description: t('services.graduation.desc'),
+                      features: [
+                        isRTL ? 'دعم شامل' : 'Complete Support',
+                        isRTL ? 'من الفكرة للتنفيذ' : 'Idea to Implementation',
+                        isRTL ? 'جميع التخصصات' : 'All Disciplines',
+                        isRTL ? 'ترتيبات عالية' : 'Top Rankings'
+                      ]
+                    })}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openServiceDetails({ title: t('services.graduation.title'), description: t('services.graduation.desc') }); } }}
+                  >
                     <div className="text-6xl mb-6 text-center">🎓</div>
                     <h3 className="text-2xl font-bold text-blue-800 dark:text-blue-400 mb-4 text-center">
                       {t('services.graduation.title')}
@@ -359,7 +440,7 @@ const Services = () => {
                       ))}
                     </div>
                     <button 
-                      onClick={() => handleServiceRequest('graduation')}
+                      onClick={(e) => { e.stopPropagation(); handleServiceRequest('graduation'); }}
                       className="w-full bg-gradient-to-r from-blue-600 to-blue-400 dark:from-blue-700 dark:to-blue-500 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-500 dark:hover:from-blue-600 dark:hover:to-blue-400 transition"
                     >
                       {t('services.request')}
@@ -367,7 +448,22 @@ const Services = () => {
                   </div>
 
                   {/* Research Planning Service (From Articles) */}
-                  <div className={`bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-shadow ${isRTL ? 'text-right' : 'text-left'}`}>
+                  <div
+                    className={`bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-shadow ${isRTL ? 'text-right' : 'text-left'}`}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => openServiceDetails({
+                      title: isRTL ? 'خطة البحث العلمي' : 'Research Plan Development',
+                      description: isRTL ? 'خطة بحث احترافية تشمل جميع العناصر الأساسية مع المنهج المناسب للبحث' : 'Professional research plan including all essential elements with appropriate research methodology',
+                      features: [
+                        isRTL ? 'صياغة المشكلة' : 'Problem Formulation',
+                        isRTL ? 'تحديد المنهجية' : 'Methodology Selection',
+                        isRTL ? 'مراجعة الأدبيات' : 'Literature Review',
+                        isRTL ? 'جدولة زمنية' : 'Timeline Planning'
+                      ]
+                    })}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openServiceDetails(); } }}
+                  >
                     <div className="text-6xl mb-6 text-center">📋</div>
                     <h3 className="text-2xl font-bold text-blue-800 dark:text-blue-400 mb-4 text-center">
                       {isRTL ? 'خطة البحث العلمي' : 'Research Plan Development'}
@@ -389,7 +485,7 @@ const Services = () => {
                       ))}
                     </div>
                     <button 
-                      onClick={() => handleServiceRequest('research-plan')}
+                      onClick={(e) => { e.stopPropagation(); handleServiceRequest('research-plan'); }}
                       className="w-full bg-gradient-to-r from-blue-600 to-blue-400 dark:from-blue-700 dark:to-blue-500 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-500 dark:hover:from-blue-600 dark:hover:to-blue-400 transition"
                     >
                       {t('services.request')}
@@ -397,7 +493,22 @@ const Services = () => {
                   </div>
 
                   {/* Research Guidance Service (From Articles) */}
-                  <div className={`bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-shadow ${isRTL ? 'text-right' : 'text-left'}`}>
+                  <div
+                    className={`bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-shadow ${isRTL ? 'text-right' : 'text-left'}`}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => openServiceDetails({
+                      title: isRTL ? 'إرشادات البحث العلمي' : 'Research Guidance & Support',
+                      description: isRTL ? 'مساعدة في استخدام المواقع العلمية والموارد المناسبة لرحلة البحث العلمي' : 'Assistance with scientific websites and appropriate resources for your research journey',
+                      features: [
+                        isRTL ? 'المصادر العلمية' : 'Scientific Sources',
+                        isRTL ? 'قواعد البيانات' : 'Academic Databases',
+                        isRTL ? 'أدوات البحث' : 'Research Tools',
+                        isRTL ? 'مراجع موثوقة' : 'Reliable References'
+                      ]
+                    })}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openServiceDetails(); } }}
+                  >
                     <div className="text-6xl mb-6 text-center">🔍</div>
                     <h3 className="text-2xl font-bold text-blue-800 dark:text-blue-400 mb-4 text-center">
                       {isRTL ? 'إرشادات البحث العلمي' : 'Research Guidance & Support'}
@@ -419,7 +530,7 @@ const Services = () => {
                       ))}
                     </div>
                     <button 
-                      onClick={() => handleServiceRequest('research-guidance')}
+                      onClick={(e) => { e.stopPropagation(); handleServiceRequest('research-guidance'); }}
                       className="w-full bg-gradient-to-r from-blue-600 to-blue-400 dark:from-blue-700 dark:to-blue-500 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-500 dark:hover:from-blue-600 dark:hover:to-blue-400 transition"
                     >
                       {t('services.request')}
@@ -427,7 +538,22 @@ const Services = () => {
                   </div>
 
                   {/* Professional Writing Service (From Articles) */}
-                  <div className={`bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-shadow ${isRTL ? 'text-right' : 'text-left'}`}>
+                  <div
+                    className={`bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-shadow ${isRTL ? 'text-right' : 'text-left'}`}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => openServiceDetails({
+                      title: isRTL ? 'كتابة الأوراق البحثية' : 'Professional Research Papers',
+                      description: isRTL ? 'كتابة أوراق بحثية احترافية وفقاً للمعايير الأكاديمية العالمية' : 'Professional research paper writing according to international academic standards',
+                      features: [
+                        isRTL ? 'هيكل منظم' : 'Structured Format',
+                        isRTL ? 'توثيق دقيق' : 'Accurate Citations',
+                        isRTL ? 'أسلوب أكاديمي' : 'Academic Style',
+                        isRTL ? 'مراجعة شاملة' : 'Comprehensive Review'
+                      ]
+                    })}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openServiceDetails(); } }}
+                  >
                     <div className="text-6xl mb-6 text-center">✍️</div>
                     <h3 className="text-2xl font-bold text-blue-800 dark:text-blue-400 mb-4 text-center">
                       {isRTL ? 'كتابة الأوراق البحثية' : 'Professional Research Papers'}
@@ -449,7 +575,7 @@ const Services = () => {
                       ))}
                     </div>
                     <button 
-                      onClick={() => handleServiceRequest('research-paper')}
+                      onClick={(e) => { e.stopPropagation(); handleServiceRequest('research-paper'); }}
                       className="w-full bg-gradient-to-r from-blue-600 to-blue-400 dark:from-blue-700 dark:to-blue-500 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-500 dark:hover:from-blue-600 dark:hover:to-blue-400 transition"
                     >
                       {t('services.request')}
@@ -461,6 +587,105 @@ const Services = () => {
           </div>
         </div>
       </section>
+
+      {/* Service Details Modal */}
+      {isDetailsOpen && selectedService && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={closeServiceDetails}
+          />
+          {/* Modal Card */}
+          <div className={`relative z-10 w-11/12 max-w-3xl max-h-[85vh] overflow-auto bg-white dark:bg-gray-800 rounded-2xl shadow-2xl ${isRTL ? 'text-right' : 'text-left'}`}>
+            {/* Header */}
+            <div className="flex items-start justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-2xl font-bold text-blue-800 dark:text-blue-400">
+                {isRTL ? (selectedService.titleAr || selectedService.title || selectedService.name) : (selectedService.title || selectedService.name)}
+              </h3>
+              <button
+                onClick={closeServiceDetails}
+                className="ml-4 inline-flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300"
+                aria-label={t('common.close') || 'Close'}
+              >
+                ✕
+              </button>
+            </div>
+            {/* Body */}
+            <div className="p-4">
+              {/* Image */}
+              {(selectedService.image || selectedService.imageUrl) && (
+                <div className="mb-4 rounded-xl overflow-hidden">
+                  <img
+                    src={selectedService.image || selectedService.imageUrl}
+                    alt={selectedService.title || selectedService.name || 'Service'}
+                    className="w-full h-56 object-cover"
+                  />
+                </div>
+              )}
+
+              {/* Badges */}
+              <div className={`flex items-center gap-2 mb-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                {selectedService.price && (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
+                    {selectedService.price}
+                  </span>
+                )}
+                {selectedService.duration && (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold">
+                    {selectedService.duration}
+                  </span>
+                )}
+              </div>
+
+              {/* Description */}
+              {(selectedService.description || selectedService.descriptionAr) && (
+                <div className="mb-4">
+                  <div className="p-4 bg-gray-50 dark:bg-gray-900/30 rounded-lg border border-gray-100 dark:border-gray-700 max-h-60 overflow-auto whitespace-pre-line break-words leading-7 text-sm md:text-base text-gray-700 dark:text-gray-300">
+                    {isRTL ? (selectedService.descriptionAr || selectedService.description) : selectedService.description}
+                  </div>
+                </div>
+              )}
+
+              {/* Features */}
+              {selectedService.features && parseFeatures(selectedService.features).length > 0 && (
+                <div className="mb-4">
+                  <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-2 text-sm">
+                    {isRTL ? 'الميزات' : 'Features'}
+                  </h4>
+                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {parseFeatures(selectedService.features).map((f, i) => (
+                      <li key={i} className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <div className={`w-1.5 h-1.5 bg-blue-600 rounded-full ${isRTL ? 'ml-2' : 'mr-2'}`}></div>
+                        <span className="text-gray-700 dark:text-gray-300 text-sm break-words">{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className={`flex items-center justify-end gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <button
+                  onClick={() => {
+                    handleServiceRequest(selectedService.title || selectedService._id || selectedService.key || 'consultation');
+                    closeServiceDetails();
+                  }}
+                  className="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+                >
+                  {isRTL ? 'اطلب هذه الخدمة' : 'Request this service'}
+                </button>
+                <button
+                  onClick={closeServiceDetails}
+                  className="px-5 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600"
+                >
+                  {t('common.close') || (isRTL ? 'إغلاق' : 'Close')}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* CTA Section */}
       <section className="py-16 bg-blue-600 dark:bg-blue-800 text-white">

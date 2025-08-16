@@ -66,4 +66,28 @@ export const api = {
   getSafe: (p) => requestSafe(p),
   postSafe: (p, body) => requestSafe(p, { method: 'POST', body: JSON.stringify(body) }),
   putSafe: (p, body) => requestSafe(p, { method: 'PUT', body: JSON.stringify(body) }),
+  // File upload helpers (multipart/form-data)
+  uploadFile: async (file) => {
+    const fd = new FormData();
+    fd.append('file', file);
+    const headers = {};
+    try {
+      const token = typeof localStorage !== 'undefined' ? localStorage.getItem('icsrtToken') : null;
+      if (token) headers.Authorization = `Bearer ${token}`;
+    } catch {}
+    const res = await fetch(`${API_BASE_URL}/api/upload`, { method: 'POST', body: fd, headers });
+    if (!res.ok) {
+      const txt = await res.text().catch(() => '');
+      throw new Error(txt || 'Upload failed');
+    }
+    return res.json();
+  },
+  uploadFileSafe: async (file) => {
+    try {
+      const data = await api.uploadFile(file);
+      return { ok: true, data };
+    } catch (e) {
+      return { ok: false, data: { error: e?.message || 'Upload failed' } };
+    }
+  },
 };

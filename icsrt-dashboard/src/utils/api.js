@@ -1,4 +1,5 @@
 // Utility functions for API calls - No authentication required
+import { API_BASE_URL } from '../lib/api';
 export const getAuthHeaders = () => {
   return {
     'Content-Type': 'application/json'
@@ -32,9 +33,11 @@ export const apiDelete = (url) => apiCall(url, { method: 'DELETE' });
 
 // Multipart upload helper (no JSON headers)
 export const apiUpload = async (url, file) => {
+  // Allow passing path like '/api/upload' and auto-prefix with API_BASE_URL
+  const fullUrl = /^https?:\/\//i.test(url) ? url : `${API_BASE_URL}${url}`;
   const formData = new FormData();
   formData.append('file', file);
-  const res = await fetch(url, {
+  const res = await fetch(fullUrl, {
     method: 'POST',
     body: formData,
     // Let browser set Content-Type with boundary

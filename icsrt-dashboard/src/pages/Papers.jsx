@@ -4,6 +4,8 @@ import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import RefreshButton from '../components/RefreshButton';
 import Pagination from '../components/Pagination';
+import { useToast } from '../context/ToastContext';
+import { useConfirm } from '../context/ConfirmContext';
 
 const Papers = () => {
   const { hasPermission } = useAuth();
@@ -13,6 +15,8 @@ const Papers = () => {
   const [error, setError] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(12);
+  const toast = useToast();
+  const confirm = useConfirm();
 
   // Check if user has permission to view this section
   if (!hasPermission('papers', 'view')) {
@@ -58,20 +62,21 @@ const Papers = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this article?')) return;
+    const ok = await confirm({ title: 'Delete article?', message: 'This action cannot be undone.', confirmText: 'Delete' });
+    if (!ok) return;
 
     try {
       const res = await api.del(`/api/news/${id}`);
       if (res && (res.ok || res.success !== false)) {
         setData(data.filter(item => item._id !== id));
-        alert('Article deleted.');
+        toast.success('Article deleted.');
       } else {
         const errorMsg = res?.error || 'Failed to delete article.';
-        alert(errorMsg);
+        toast.error(errorMsg);
       }
     } catch (err) {
       console.error(err);
-      alert(err.message || 'Error occurred while deleting.');
+      toast.error(err.message || 'Error occurred while deleting.');
     }
   };
 

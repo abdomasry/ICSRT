@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useToast } from '../context/ToastContext';
+import { api } from '../lib/api';
 
 const AddRegistration = () => {
   const [form, setForm] = useState({
@@ -11,6 +13,8 @@ const AddRegistration = () => {
     paymentStatus: 'pending'
   });
 
+  const toast = useToast();
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
@@ -21,24 +25,15 @@ const AddRegistration = () => {
     const payload = { ...form, registeredAt: new Date().toISOString() };
 
     try {
-      const res = await fetch('http://localhost:3000/api/registrations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+      await api.post('/api/registrations', payload);
+      toast.success('Registration added successfully!');
+      setForm({
+        fullName: '', email: '', phone: '', institution: '',
+        country: '', conference: '', paymentStatus: 'pending'
       });
-
-      if (res.ok) {
-        alert('Registration added successfully!');
-        setForm({
-          fullName: '', email: '', phone: '', institution: '',
-          country: '', conference: '', paymentStatus: 'pending'
-        });
-      } else {
-        alert('Failed to add registration.');
-      }
     } catch (err) {
       console.error(err);
-      alert('An error occurred while submitting.');
+      toast.error('An error occurred while submitting.');
     }
   };
 

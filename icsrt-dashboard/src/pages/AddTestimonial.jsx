@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '../context/ToastContext';
+import { api } from '../lib/api';
 
 const AddTestimonial = () => {
   const navigate = useNavigate();
+  const toast = useToast();
   const [form, setForm] = useState({ name: '', role: '', message: '' });
 
   const handleChange = (e) => {
@@ -13,20 +16,12 @@ const AddTestimonial = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:3000/api/testimonials', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
-      });
-      if (res.ok) {
-        alert('Testimonial added successfully!');
-        navigate('/testimonials');
-      } else {
-        alert('Failed to add.');
-      }
+      await api.post('/api/testimonials', form);
+      toast.success('Testimonial added successfully!');
+      navigate('/testimonials');
     } catch (err) {
       console.error(err);
-      alert('Error occurred while adding.');
+      toast.error('Failed to add.');
     }
   };
 

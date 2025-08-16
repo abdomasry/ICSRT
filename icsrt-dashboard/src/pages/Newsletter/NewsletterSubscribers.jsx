@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { FaPlus, FaEnvelope, FaUsers, FaSearch, FaFilter, FaDownload, FaTrash, FaPaperPlane } from 'react-icons/fa';
 import { api } from '../../lib/api';
 import Pagination from '../../components/Pagination';
+import { useToast } from '../../context/ToastContext';
+import { useConfirm } from '../../context/ConfirmContext';
 
 const NewsletterSubscribers = () => {
   const [subscribers, setSubscribers] = useState([]);
@@ -16,6 +18,8 @@ const NewsletterSubscribers = () => {
   const [selectedSubscribers, setSelectedSubscribers] = useState([]);
   const [showSendEmail, setShowSendEmail] = useState(false);
   const [viewMode, setViewMode] = useState('gradient'); // 'gradient' | 'cards' | 'list'
+  const toast = useToast();
+  const confirm = useConfirm();
 
   // Fetch subscribers
   const fetchSubscribers = async () => {
@@ -37,7 +41,7 @@ const NewsletterSubscribers = () => {
     total: totalData.total || 0,
     unsubscribed: unsubData.total || 0
   });
-    } catch (error) {
+  } catch (error) {
       console.error('Error fetching subscribers:', error);
       setError('Network error occurred');
     } finally {
@@ -59,9 +63,8 @@ const NewsletterSubscribers = () => {
   const handleBulkUnsubscribe = async () => {
     if (selectedSubscribers.length === 0) return;
     
-    if (!window.confirm(`Are you sure you want to unsubscribe ${selectedSubscribers.length} subscribers?`)) {
-      return;
-    }
+  const ok = await confirm({ title: 'Bulk unsubscribe?', message: `Unsubscribe ${selectedSubscribers.length} subscribers?`, confirmText: 'Unsubscribe' });
+  if (!ok) return;
     
     try {
       for (const email of selectedSubscribers) {
@@ -70,9 +73,11 @@ const NewsletterSubscribers = () => {
       
       setSelectedSubscribers([]);
       fetchSubscribers();
+      toast.success('Selected subscribers have been unsubscribed.');
     } catch (error) {
       console.error('Bulk unsubscribe error:', error);
       setError('Failed to unsubscribe selected users');
+      toast.error('Failed to unsubscribe selected users');
     }
   };
 
@@ -157,7 +162,13 @@ const NewsletterSubscribers = () => {
 
       {/* Modern Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white/80 backdrop-blur-lg rounded-xl border border-white/20 shadow-lg p-6 relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+        <div
+          className={`bg-white/80 backdrop-blur-lg rounded-xl border border-white/20 shadow-lg p-6 relative overflow-hidden group hover:shadow-xl transition-all duration-300 cursor-pointer ${statusFilter==='all' ? 'ring-2 ring-blue-300' : ''}`}
+          onClick={() => { setStatusFilter('all'); setPage(1); }}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { setStatusFilter('all'); setPage(1); } }}
+        >
           <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <div className="relative z-10">
             <div className="flex items-center justify-between">
@@ -173,7 +184,13 @@ const NewsletterSubscribers = () => {
           </div>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-lg rounded-xl border border-white/20 shadow-lg p-6 relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+        <div
+          className={`bg-white/80 backdrop-blur-lg rounded-xl border border-white/20 shadow-lg p-6 relative overflow-hidden group hover:shadow-xl transition-all duration-300 cursor-pointer ${statusFilter==='active' ? 'ring-2 ring-blue-300' : ''}`}
+          onClick={() => { setStatusFilter('active'); setPage(1); }}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { setStatusFilter('active'); setPage(1); } }}
+        >
           <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/50 to-green-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <div className="relative z-10">
             <div className="flex items-center justify-between">
@@ -189,7 +206,13 @@ const NewsletterSubscribers = () => {
           </div>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-lg rounded-xl border border-white/20 shadow-lg p-6 relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+        <div
+          className={`bg-white/80 backdrop-blur-lg rounded-xl border border-white/20 shadow-lg p-6 relative overflow-hidden group hover:shadow-xl transition-all duration-300 cursor-pointer ${statusFilter==='unsubscribed' ? 'ring-2 ring-blue-300' : ''}`}
+          onClick={() => { setStatusFilter('unsubscribed'); setPage(1); }}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { setStatusFilter('unsubscribed'); setPage(1); } }}
+        >
           <div className="absolute inset-0 bg-gradient-to-br from-red-50/50 to-rose-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <div className="relative z-10">
             <div className="flex items-center justify-between">
@@ -439,6 +462,7 @@ const SendNewsletterModal = ({ onClose, onSuccess }) => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const toast = useToast();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -446,13 +470,14 @@ const SendNewsletterModal = ({ onClose, onSuccess }) => {
     setError('');
 
     try {
-      const result = await api.post('/api/newsletter/send', formData);
+  const result = await api.post('/api/newsletter/send', formData);
       const successCount = result?.successCount ?? result?.count ?? 0;
-      alert(`Newsletter sent successfully to ${successCount} subscribers!`);
+  toast.success(`Newsletter sent successfully to ${successCount} subscribers!`);
       onSuccess();
     } catch (error) {
       console.error('Send newsletter error:', error);
       setError('Network error occurred');
+  toast.error('Failed to send newsletter');
     } finally {
       setLoading(false);
     }

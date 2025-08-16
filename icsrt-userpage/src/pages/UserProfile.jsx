@@ -57,12 +57,27 @@ const UserProfile = () => {
     setLoading(true);
     
     try {
-      const data = await api.put(`/api/users/${user._id}`, form);
-      if (data && (data.success !== false)) {
+      // Only send fields that backend allows and won't break identity
+      const payload = {
+        fullName: form.fullName,
+        // Keep email consistent; if you want to change email, do it via a dedicated flow
+        email: form.email?.toLowerCase(),
+        phone: form.phone,
+        institution: form.institution,
+        bio: form.bio,
+      };
+  const res = await api.put(`/api/users/${user._id}`, payload);
+      if (res && res.success !== false) {
+        const updated = res.user || res.data || null;
+        if (updated) {
+          updateUser(updated);
+        } else {
+          // Fallback: re-fetch user from API
+          try { await api.get(`/api/users/${user._id}`).then(updateUser); } catch {}
+        }
         setMessage("Profile updated successfully!");
-        updateUser(data.user || data); // Update user context
       } else {
-        setError(data?.error || "Failed to update profile");
+        setError(res?.error || "Failed to update profile");
       }
     } catch (err) {
       setError("Network error. Please try again.");

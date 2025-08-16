@@ -1,17 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useToast } from '../context/ToastContext';
+import { api } from '../lib/api';
 
 const EditFAQ = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [form, setForm] = useState({ question: '', answer: '' });
+  const toast = useToast();
 
   useEffect(() => {
-    fetch(`http://localhost:3000/api/faq/${id}`)
-      .then(res => res.json())
-      .then(setForm)
-      .catch(err => console.error('Fetch error:', err));
-  }, [id]);
+    (async () => {
+      try {
+        const data = await api.get(`/api/faq/${id}`);
+        setForm({ question: data.question || '', answer: data.answer || '' });
+      } catch (err) {
+        console.error('Fetch error:', err);
+        toast.error('Failed to load question');
+      }
+    })();
+  }, [id, toast]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -21,20 +29,12 @@ const EditFAQ = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch(`http://localhost:3000/api/faq/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
-      });
-      if (res.ok) {
-        alert('Question updated successfully!');
-        navigate('/faq');
-      } else {
-        alert('Failed to update question.');
-      }
+      await api.put(`/api/faq/${id}`, form);
+      toast.success('Question updated successfully!');
+      navigate('/faq');
     } catch (err) {
       console.error(err);
-      alert('An error occurred while updating.');
+      toast.error('Failed to update question.');
     }
   };
 

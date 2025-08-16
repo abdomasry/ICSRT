@@ -22,9 +22,13 @@ import {
 import { api } from '../lib/api';
 import Pagination from '../components/Pagination';
 import QRCode from 'react-qr-code';
+import { useToast } from '../context/ToastContext';
+import { useConfirm } from '../context/ConfirmContext';
 
 const ServiceOrders = () => {
+  const toast = useToast();
   const [orders, setOrders] = useState([]);
+  const confirm = useConfirm();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [viewMode, setViewMode] = useState('gradient'); // 'gradient' | 'cards' | 'list'
@@ -39,6 +43,16 @@ const ServiceOrders = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(12);
   const [total, setTotal] = useState(0);
+  // Base stats that respect search/serviceType but ignore selected status
+  const [baseStats, setBaseStats] = useState({
+    total: 0,
+    pending: 0,
+    confirmed: 0,
+    inProgress: 0,
+    readyForPayment: 0,
+    completed: 0,
+    cancelled: 0,
+  });
 
   // Enhanced functionality states
   const [newMessage, setNewMessage] = useState('');
@@ -102,47 +116,45 @@ const ServiceOrders = () => {
     readyForPayment: orders.filter(o => o.status === 'ready-for-payment').length
   };
 
-  // Global stats (unfiltered counts)
-  const [globalStats, setGlobalStats] = useState({
-    total: 0,
-    pending: 0,
-    inProgress: 0,
-    completed: 0,
-    cancelled: 0,
-    confirmed: 0,
-    readyForPayment: 0,
-  });
+  // Deprecated: kept for tooltip fallback only (will be updated from baseStats)
+  const [globalStats, setGlobalStats] = useState({ total: 0, pending: 0, inProgress: 0, completed: 0, cancelled: 0, confirmed: 0, readyForPayment: 0 });
 
-  const fetchGlobalStats = async () => {
-    try {
-      const all = await api.get('/api/service-orders');
-      const arr = Array.isArray(all) ? all : (Array.isArray(all?.data) ? all.data : []);
-      const gs = {
-        total: arr.length,
-        pending: arr.filter(o => o.status === 'pending').length,
-        inProgress: arr.filter(o => o.status === 'in-progress').length,
-        completed: arr.filter(o => o.status === 'completed').length,
-        cancelled: arr.filter(o => o.status === 'cancelled').length,
-        confirmed: arr.filter(o => o.status === 'confirmed').length,
-        readyForPayment: arr.filter(o => o.status === 'ready-for-payment').length,
-      };
-      setGlobalStats(gs);
-    } catch (e) {
-      // fallback to current stats if global fetch fails
-      setGlobalStats(orderStats);
-    }
+  // Stats for what is currently visible in the list (respects search, status and service type filters and pagination)
+  const filteredStats = React.useMemo(() => {
+    const list = Array.isArray(filteredOrders) ? filteredOrders : [];
+    return {
+      total: list.length,
+      pending: list.filter(o => o.status === 'pending').length,
+      inProgress: list.filter(o => o.status === 'in-progress').length,
+      completed: list.filter(o => o.status === 'completed').length,
+      cancelled: list.filter(o => o.status === 'cancelled').length,
+      confirmed: list.filter(o => o.status === 'confirmed').length,
+      readyForPayment: list.filter(o => o.status === 'ready-for-payment').length,
+    };
+  }, [filteredOrders]);
+
+  const syncGlobalFromBase = (bs) => {
+    if (!bs) return;
+    setGlobalStats({
+      total: bs.total || 0,
+      pending: bs.pending || 0,
+      inProgress: bs.inProgress || 0,
+      completed: bs.completed || 0,
+      cancelled: bs.cancelled || 0,
+      confirmed: bs.confirmed || 0,
+      readyForPayment: bs.readyForPayment || 0,
+    });
   };
 
   useEffect(() => {
     fetchServiceOrders();
     fetchServiceTypes();
-  fetchGlobalStats();
   }, [page, pageSize]);
 
   useEffect(() => {
     setPage(1);
     fetchServiceOrders();
-  }, [statusFilter, searchTerm]);
+  }, [statusFilter, searchTerm, serviceTypeFilter]);
 
   // Helper: fetch WA status and QR
   const fetchWaStatusAndQR = async () => {
@@ -215,7 +227,7 @@ const ServiceOrders = () => {
       }, 2000);
     } catch (e) {
       setWaBusy(false);
-      alert(e.message || 'Failed to start WhatsApp');
+      toast.error(e.message || 'Failed to start WhatsApp');
     }
   };
 
@@ -269,6 +281,7 @@ const ServiceOrders = () => {
         limit: String(pageSize),
         status: statusFilter,
         search: searchTerm,
+        serviceType: serviceTypeFilter,
         sortBy: 'submittedAt',
         sortOrder: 'desc'
       });
@@ -279,6 +292,19 @@ const ServiceOrders = () => {
         const p = data.pagination || {};
         // prefer totalItems if present (admin enhanced), else compute
         setTotal(parseInt(p.totalItems || p.total || 0));
+        // set base stats (respect search/serviceType, ignore status)
+        if (data.stats) {
+          setBaseStats({
+            total: parseInt(data.stats.total || 0),
+            pending: parseInt(data.stats.pending || 0),
+            confirmed: parseInt(data.stats.confirmed || 0),
+            inProgress: parseInt(data.stats.inProgress || 0),
+            readyForPayment: parseInt(data.stats.readyForPayment || 0),
+            completed: parseInt(data.stats.completed || 0),
+            cancelled: parseInt(data.stats.cancelled || 0),
+          });
+          syncGlobalFromBase(data.stats);
+        }
       } else {
         // Fallback to basic API
         const basic = await api.get('/api/service-orders');
@@ -286,8 +312,16 @@ const ServiceOrders = () => {
         setOrders(Array.isArray(ordersArray) ? ordersArray : []);
         setTotal(Array.isArray(ordersArray) ? ordersArray.length : 0);
       }
-  // Refresh global stats independently of current filter
-  fetchGlobalStats();
+  // sync fallback global from current list if server stats missing
+  if (!data?.stats) syncGlobalFromBase({
+    total: orders.length,
+    pending: orderStats.pending,
+    confirmed: orderStats.confirmed,
+    inProgress: orderStats.inProgress,
+    readyForPayment: orderStats.readyForPayment,
+    completed: orderStats.completed,
+    cancelled: orderStats.cancelled,
+  });
     } catch (err) {
       console.error('Error fetching service orders:', err);
       setError(err.message || 'Failed to fetch service orders');
@@ -297,19 +331,18 @@ const ServiceOrders = () => {
   };
 
   const handleDelete = async (orderId) => {
-    if (!window.confirm('Are you sure you want to delete this service order?')) {
-      return;
-    }
+    const ok = await confirm({ title: 'Delete service order?', message: 'This action cannot be undone.', confirmText: 'Delete' });
+    if (!ok) return;
 
     try {
       await api.del(`/api/service-orders/${orderId}`);
 
       // Remove order from local state
       setOrders(orders.filter(order => order._id !== orderId));
-      alert('Service order deleted successfully');
+      toast.success('Service order deleted successfully');
     } catch (err) {
       console.error('Error deleting service order:', err);
-      alert('Failed to delete service order');
+      toast.error('Failed to delete service order');
     }
   };
 
@@ -320,11 +353,11 @@ const ServiceOrders = () => {
       setOrders(orders.map(order => 
         order._id === orderId ? { ...order, status: newStatus } : order
       ));
-  alert(`Order status updated to ${newStatus}`);
+  toast.success(`Order status updated to ${newStatus}`);
   fetchGlobalStats();
     } catch (err) {
       console.error('Error updating status:', err);
-      alert('Failed to update status');
+      toast.error('Failed to update status');
     }
   };
 
@@ -344,11 +377,11 @@ const ServiceOrders = () => {
   await fetchServiceOrders();
   fetchGlobalStats();
       } else {
-        alert('Failed to generate purchase link: ' + (data?.error || 'Unknown error'));
+        toast.error('Failed to generate purchase link: ' + (data?.error || 'Unknown error'));
       }
     } catch (error) {
       console.error('Error generating purchase link:', error);
-      alert('Failed to generate purchase link');
+      toast.error('Failed to generate purchase link');
     } finally {
       setGeneratingPurchaseLink(false);
     }
@@ -387,7 +420,7 @@ const ServiceOrders = () => {
       setSelectedOrder(prev => (prev ? { ...prev, messages } : prev));
     } catch (error) {
       console.error('Error sending message:', error);
-      alert(error.message || 'Failed to send message');
+      toast.error(error.message || 'Failed to send message');
     } finally {
       setSendingMessage(false);
     }
@@ -401,7 +434,7 @@ const ServiceOrders = () => {
       setLastNotifyResults(null);
       const channels = Object.entries(notifyChannels).filter(([, v]) => v).map(([k]) => k);
       if (channels.length === 0) {
-        alert('Select at least one channel');
+        toast.warning('Select at least one channel');
         return;
       }
       const result = await api.post(`/api/admin/service-orders/${selectedOrder._id}/notify`, {
@@ -421,11 +454,11 @@ const ServiceOrders = () => {
         const messages = conv?.conversation?.messages || [];
         setSelectedOrder(prev => (prev ? { ...prev, messages } : prev));
       } else {
-        alert('Failed to send notifications: ' + (result?.error || 'Unknown error'));
+        toast.error('Failed to send notifications: ' + (result?.error || 'Unknown error'));
       }
     } catch (e) {
       console.error('Notify error:', e);
-      alert('Failed to send notifications');
+      toast.error('Failed to send notifications');
     } finally {
       setSendingNotify(false);
     }
@@ -446,13 +479,13 @@ const ServiceOrders = () => {
         setNewPrice('');
         setPriceReason('');
         setPriceCustomMessage('');
-        alert('Price updated successfully');
+        toast.success('Price updated successfully');
       } else {
-        alert('Failed to update price: ' + (res?.error || 'Unknown error'));
+        toast.error('Failed to update price: ' + (res?.error || 'Unknown error'));
       }
     } catch (e) {
       console.error('Price update error:', e);
-      alert('Failed to update price');
+      toast.error('Failed to update price');
     } finally {
       setUpdatingPriceAndNotify(false);
     }
@@ -553,7 +586,7 @@ const ServiceOrders = () => {
       </div>
 
       {/* Modern Stats Cards (clickable to categorize by status) */}
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
+  <div className="grid grid-cols-2 md:grid-cols-7 gap-4 mb-8">
   <div
           role="button"
           tabIndex={0}
@@ -565,9 +598,9 @@ const ServiceOrders = () => {
           <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <div className="relative z-10 text-center">
             <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-1">
-              {globalStats.total}
+              {baseStats.total}
             </div>
-            <div className="text-sm font-semibold text-gray-600">Total Orders</div>
+            <div className="text-sm font-semibold text-gray-600" title={`All orders in DB: ${globalStats.total}`}>Total Orders</div>
             <div className="text-2xl mt-2">🛒</div>
           </div>
         </div>
@@ -583,9 +616,9 @@ const ServiceOrders = () => {
           <div className="absolute inset-0 bg-gradient-to-br from-yellow-50/50 to-orange-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <div className="relative z-10 text-center">
             <div className="text-3xl font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent mb-1">
-              {globalStats.pending}
+              {baseStats.pending}
             </div>
-            <div className="text-sm font-semibold text-gray-600">Pending</div>
+            <div className="text-sm font-semibold text-gray-600" title={`All pending in DB: ${globalStats.pending}`}>Pending</div>
             <div className="text-2xl mt-2">⏳</div>
           </div>
         </div>
@@ -601,9 +634,9 @@ const ServiceOrders = () => {
           <div className="absolute inset-0 bg-gradient-to-br from-green-50/50 to-emerald-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <div className="relative z-10 text-center">
             <div className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-1">
-              {globalStats.confirmed}
+              {baseStats.confirmed}
             </div>
-            <div className="text-sm font-semibold text-gray-600">Confirmed</div>
+            <div className="text-sm font-semibold text-gray-600" title={`All confirmed in DB: ${globalStats.confirmed}`}>Confirmed</div>
             <div className="text-2xl mt-2">✅</div>
           </div>
         </div>
@@ -619,9 +652,9 @@ const ServiceOrders = () => {
           <div className="absolute inset-0 bg-gradient-to-br from-purple-50/50 to-indigo-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <div className="relative z-10 text-center">
             <div className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mb-1">
-              {globalStats.inProgress}
+              {baseStats.inProgress}
             </div>
-            <div className="text-sm font-semibold text-gray-600">In Progress</div>
+            <div className="text-sm font-semibold text-gray-600" title={`All in-progress in DB: ${globalStats.inProgress}`}>In Progress</div>
             <div className="text-2xl mt-2">⚙️</div>
           </div>
         </div>
@@ -637,9 +670,9 @@ const ServiceOrders = () => {
           <div className="absolute inset-0 bg-gradient-to-br from-cyan-50/50 to-blue-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <div className="relative z-10 text-center">
             <div className="text-3xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent mb-1">
-              {globalStats.readyForPayment}
+              {baseStats.readyForPayment}
             </div>
-            <div className="text-sm font-semibold text-gray-600">Ready to Pay</div>
+            <div className="text-sm font-semibold text-gray-600" title={`All ready-to-pay in DB: ${globalStats.readyForPayment}`}>Ready to Pay</div>
             <div className="text-2xl mt-2">💳</div>
           </div>
         </div>
@@ -655,10 +688,28 @@ const ServiceOrders = () => {
           <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/50 to-green-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <div className="relative z-10 text-center">
             <div className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent mb-1">
-              {globalStats.completed}
+              {baseStats.completed}
             </div>
-            <div className="text-sm font-semibold text-gray-600">Completed</div>
+            <div className="text-sm font-semibold text-gray-600" title={`All completed in DB: ${globalStats.completed}`}>Completed</div>
             <div className="text-2xl mt-2">🎉</div>
+          </div>
+        </div>
+
+  <div
+          role="button"
+          tabIndex={0}
+          onClick={() => setStatusFilter('cancelled')}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setStatusFilter('cancelled')}
+          aria-pressed={statusFilter === 'cancelled'}
+          className={`bg-white/80 rounded-xl border ${statusFilter==='cancelled' ? 'border-rose-200 ring-1 ring-rose-100' : 'border-white/20'} shadow-lg p-6 relative overflow-hidden group hover:shadow-xl transition-all duration-300 cursor-pointer`}
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-rose-50/50 to-red-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="relative z-10 text-center">
+            <div className="text-3xl font-bold bg-gradient-to-r from-rose-600 to-red-600 bg-clip-text text-transparent mb-1">
+              {baseStats.cancelled}
+            </div>
+            <div className="text-sm font-semibold text-gray-600" title={`All cancelled in DB: ${globalStats.cancelled}`}>Cancelled</div>
+            <div className="text-2xl mt-2">❌</div>
           </div>
         </div>
       </div>
@@ -711,7 +762,7 @@ const ServiceOrders = () => {
           </div>
           <div className="bg-blue-50/80 rounded-xl p-3 border border-blue-200 text-center">
             <span className="text-sm font-semibold text-blue-700">
-              {filteredOrders.length} of {orders.length} orders
+              {filteredOrders.length} of {total || orders.length} {statusFilter === 'all' ? 'orders' : `${statusFilter} orders`}
             </span>
           </div>
         </div>
@@ -1014,7 +1065,7 @@ const ServiceOrders = () => {
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(generatedPurchaseLink);
-                  alert('Payment link copied to clipboard!');
+                  toast.success('Payment link copied to clipboard');
                 }}
                 className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 flex items-center justify-center gap-2"
               >

@@ -2,11 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaEdit, FaTrash, FaCheck, FaTimes, FaClock } from 'react-icons/fa';
 import { api } from '../../lib/api';
+import { useToast } from '../../context/ToastContext';
+import { useConfirm } from '../../context/ConfirmContext';
 
 const UserView = () => {
+  const toast = useToast();
   const { id } = useParams();
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const confirm = useConfirm();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -34,9 +38,8 @@ const UserView = () => {
       ? 'Are you sure you want to approve this user registration?' 
       : 'Are you sure you want to reject this user registration?';
     
-    if (!window.confirm(confirmMessage)) {
-      return;
-    }
+  const ok = await confirm({ title: 'Confirm approval', message: confirmMessage, confirmText: action === 'approve' ? 'Approve' : 'Reject' });
+  if (!ok) return;
 
     try {
       await api.put(`/api/users/${id}`, {
@@ -55,26 +58,25 @@ const UserView = () => {
         approvedAt: action === 'approve' ? new Date().toISOString() : null
       });
 
-      alert(`User ${action}d successfully!`);
+  toast.success(`User ${action}d successfully!`);
     } catch (err) {
       console.error(`Error ${action}ing user:`, err);
-      alert(`Failed to ${action} user: ` + err.message);
+  toast.error(`Failed to ${action} user: ` + err.message);
     }
   };
 
   const handleDelete = async () => {
-    if (!window.confirm('Are you sure you want to delete this user?')) {
-      return;
-    }
+    const ok = await confirm({ title: 'Delete user?', message: 'This action cannot be undone.', confirmText: 'Delete' });
+    if (!ok) return;
 
     try {
       await api.del(`/api/admin/users/${id}`);
 
-      alert('User deleted successfully');
+  toast.success('User deleted successfully');
       navigate('/users');
     } catch (err) {
       console.error('Error deleting user:', err);
-      alert('Failed to delete user: ' + err.message);
+  toast.error('Failed to delete user: ' + err.message);
     }
   };
 

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { FaUsers, FaClipboardList, FaCog, FaFileAlt, FaBook, FaCalendarAlt, FaNewspaper, FaQuestionCircle, FaComments, FaEye, FaClock, FaChartLine, FaPlus, FaEdit, FaTrash, FaDownload, FaRefreshCw } from 'react-icons/fa';
 import { usePermissions } from '../context/PermissionContext';
 import { api } from '../lib/api';
+import { useToast } from '../context/ToastContext';
 
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
@@ -9,6 +10,7 @@ const Dashboard = () => {
   const [error, setError] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const { hasPermission, getDisplayRole, getPermissionSummary, user } = usePermissions();
+  const toast = useToast();
 
   const fetchStats = async (showRefreshIndicator = false) => {
     try {
@@ -345,7 +347,7 @@ const Dashboard = () => {
               icon={<FaDownload />}
               color="#6366F1"
               permission="dashboard.view"
-              onClick={() => alert('Export functionality coming soon!')}
+              onClick={() => toast.info('Export functionality coming soon!')}
             />
           </div>
         </div>

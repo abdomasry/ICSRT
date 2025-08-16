@@ -4,8 +4,12 @@ import { FaEdit, FaTrash, FaPlus, FaSearch, FaEye, FaClock, FaUser, FaUserCheck,
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../lib/api';
 import Pagination from '../../components/Pagination';
+import { useToast } from '../../context/ToastContext';
+import { useConfirm } from '../../context/ConfirmContext';
 
 const UserList = () => {
+  const toast = useToast();
+  const confirm = useConfirm();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -15,6 +19,8 @@ const UserList = () => {
   const [pageSize, setPageSize] = useState(12);
   const [total, setTotal] = useState(0);
   const [viewMode, setViewMode] = useState('gradient'); // 'gradient' | 'cards'
+  const [activeFilter, setActiveFilter] = useState('all'); // 'all' | 'researcher_professional' | 'student_academic'
+  const [serverStats, setServerStats] = useState({ total: 0, researchers: 0, students: 0 });
   const { hasPermission } = useAuth();
 
   // Check if user has view permission for users
@@ -31,7 +37,11 @@ const UserList = () => {
 
   useEffect(() => {
     fetchUsers();
-  }, [page, pageSize]);
+  }, [page, pageSize, activeFilter]);
+
+  useEffect(() => {
+    fetchUserStats();
+  }, []);
 
   useEffect(() => {
     // Filter users based on search term (client-side refinement)
@@ -65,19 +75,49 @@ const UserList = () => {
         search: searchTerm || '',
         sortBy: 'createdAt',
         sortOrder: 'desc',
+        userType: activeFilter || 'all',
       });
       const resp = await api.getJson(`/api/users?${params.toString()}`);
       if (resp && Array.isArray(resp.data)) {
         setUsers(resp.data);
         const p = resp.pagination || {};
         setTotal(parseInt(p.total || 0));
+        // Reflect current filtered total in the active card (independent of stats endpoint)
+        if (!searchTerm) {
+          setServerStats((prev) => ({
+            ...prev,
+            ...(activeFilter === 'all' ? { total: parseInt(p.total || 0) } : {}),
+            ...(activeFilter === 'researcher_professional' ? { researchers: parseInt(p.total || 0) } : {}),
+            ...(activeFilter === 'student_academic' ? { students: parseInt(p.total || 0) } : {}),
+          }));
+        }
+        // Ensure counters reflect DB totals even before stats endpoint resolves
+        fetchUserCountsFallback();
       } else if (Array.isArray(resp)) {
         // Fallback shape, no pagination provided
         setUsers(resp);
         setTotal(resp.length);
+        if (!searchTerm) {
+          setServerStats((prev) => ({
+            ...prev,
+            ...(activeFilter === 'all' ? { total: resp.length } : {}),
+            ...(activeFilter === 'researcher_professional' ? { researchers: resp.length } : {}),
+            ...(activeFilter === 'student_academic' ? { students: resp.length } : {}),
+          }));
+        }
+        fetchUserCountsFallback();
       } else if (resp && Array.isArray(resp.data)) {
         setUsers(resp.data);
         setTotal(resp.data.length);
+        if (!searchTerm) {
+          setServerStats((prev) => ({
+            ...prev,
+            ...(activeFilter === 'all' ? { total: resp.data.length } : {}),
+            ...(activeFilter === 'researcher_professional' ? { researchers: resp.data.length } : {}),
+            ...(activeFilter === 'student_academic' ? { students: resp.data.length } : {}),
+          }));
+        }
+        fetchUserCountsFallback();
       } else {
         console.warn('Users API returned unexpected format:', resp);
         setUsers([]);
@@ -91,10 +131,57 @@ const UserList = () => {
     }
   };
 
-  const handleDelete = async (userId) => {
-    if (!window.confirm('Are you sure you want to delete this user?')) {
-      return;
+  const fetchUserStats = async () => {
+    try {
+      const resp = await api.getJson('/api/users/stats');
+      if (resp && (typeof resp.total === 'number')) {
+        setServerStats({
+          total: resp.total || 0,
+          researchers: resp.researchers || 0,
+          students: resp.students || 0,
+        });
+        // If backend returns zeros but we have users, try fallback
+        if ((resp.total === 0 || resp.total === undefined) && Array.isArray(users) && users.length > 0) {
+          await fetchUserCountsFallback();
+        }
+      } else {
+        await fetchUserCountsFallback();
+      }
+    } catch (e) {
+      // Fallback to counting via list endpoint
+      await fetchUserCountsFallback();
     }
+  };
+
+  const fetchUserCountsFallback = async () => {
+    try {
+      const mk = async (type) => {
+        const params = new URLSearchParams({ page: '1', limit: '1', userType: type });
+        const r = await api.getJson(`/api/users?${params.toString()}`);
+        if (r && r.pagination && typeof r.pagination.total === 'number') return r.pagination.total;
+        if (Array.isArray(r?.data)) return r.data.length; // unlikely due to limit=1
+        return 0;
+      };
+      const [total, researchers, students] = await Promise.all([
+        mk('all'),
+        mk('researcher_professional'),
+        mk('student_academic'),
+      ]);
+      setServerStats({ total, researchers, students });
+    } catch {
+      // leave defaults
+    }
+  };
+
+  const handleStatClick = (type) => {
+    // type: 'all' | 'researcher_professional' | 'student_academic'
+    setActiveFilter(type);
+    setPage(1);
+  };
+
+  const handleDelete = async (userId) => {
+    const ok = await confirm({ title: 'Delete user?', message: 'This action cannot be undone.', confirmText: 'Delete' });
+    if (!ok) return;
 
     try {
       await api.del(`/api/users/${userId}`);
@@ -103,10 +190,10 @@ const UserList = () => {
       if (Array.isArray(users)) {
         setUsers(users.filter(user => user._id !== userId));
       }
-      alert('User deleted successfully');
+  toast.success('User deleted successfully');
     } catch (err) {
       console.error('Error deleting user:', err);
-      alert('Failed to delete user: ' + err.message);
+  toast.error('Failed to delete user: ' + err.message);
     }
   };
 
@@ -181,7 +268,7 @@ const UserList = () => {
               </button>
             </div>
             <button
-              onClick={fetchUsers}
+              onClick={() => { fetchUsers(); fetchUserStats(); }}
               className="group bg-gradient-to-r from-gray-600 to-slate-600 hover:from-gray-700 hover:to-slate-700 text-white px-6 py-3 rounded-xl font-semibold transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2"
             >
               <span className="text-xl">🔄</span>
@@ -200,62 +287,55 @@ const UserList = () => {
         </div>
       </div>
 
-      {/* Modern Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-        <div className="bg-white/80 backdrop-blur-lg rounded-xl border border-white/20 shadow-lg p-6 relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+      {/* Clickable Filter Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        {/* Total */}
+        <button
+          type="button"
+          onClick={() => handleStatClick('all')}
+          className={`text-left bg-white/80 backdrop-blur-lg rounded-xl border ${activeFilter==='all' ? 'border-blue-300 ring-2 ring-blue-200' : 'border-white/20'} shadow-lg p-6 relative overflow-hidden group hover:shadow-xl transition-all duration-300`}
+        >
           <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <div className="relative z-10 text-center">
             <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-1">
-              {userStats.total}
+              {serverStats.total}
             </div>
-            <div className="text-sm font-semibold text-gray-600">Total Users</div>
+            <div className="text-sm font-semibold text-gray-600">Total</div>
             <div className="text-2xl mt-2">👥</div>
           </div>
-        </div>
+        </button>
 
-        <div className="bg-white/80 backdrop-blur-lg rounded-xl border border-white/20 shadow-lg p-6 relative overflow-hidden group hover:shadow-xl transition-all duration-300">
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/50 to-green-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <div className="relative z-10 text-center">
-            <div className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent mb-1">
-              {userStats.verified}
-            </div>
-            <div className="text-sm font-semibold text-gray-600">Verified</div>
-            <div className="text-2xl mt-2">✅</div>
-          </div>
-        </div>
-
-        <div className="bg-white/80 backdrop-blur-lg rounded-xl border border-white/20 shadow-lg p-6 relative overflow-hidden group hover:shadow-xl transition-all duration-300">
-          <div className="absolute inset-0 bg-gradient-to-br from-yellow-50/50 to-orange-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <div className="relative z-10 text-center">
-            <div className="text-3xl font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent mb-1">
-              {userStats.pending}
-            </div>
-            <div className="text-sm font-semibold text-gray-600">Pending</div>
-            <div className="text-2xl mt-2">⏳</div>
-          </div>
-        </div>
-
-        <div className="bg-white/80 backdrop-blur-lg rounded-xl border border-white/20 shadow-lg p-6 relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+        {/* Researchers */}
+        <button
+          type="button"
+          onClick={() => handleStatClick('researcher_professional')}
+          className={`text-left bg-white/80 backdrop-blur-lg rounded-xl border ${activeFilter==='researcher_professional' ? 'border-purple-300 ring-2 ring-purple-200' : 'border-white/20'} shadow-lg p-6 relative overflow-hidden group hover:shadow-xl transition-all duration-300`}
+        >
           <div className="absolute inset-0 bg-gradient-to-br from-purple-50/50 to-indigo-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <div className="relative z-10 text-center">
             <div className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mb-1">
-              {userStats.admin}
+              {serverStats.researchers}
             </div>
-            <div className="text-sm font-semibold text-gray-600">Admins</div>
-            <div className="text-2xl mt-2">👑</div>
+            <div className="text-sm font-semibold text-gray-600">Researchers</div>
+            <div className="text-2xl mt-2">🧪</div>
           </div>
-        </div>
+        </button>
 
-        <div className="bg-white/80 backdrop-blur-lg rounded-xl border border-white/20 shadow-lg p-6 relative overflow-hidden group hover:shadow-xl transition-all duration-300">
-          <div className="absolute inset-0 bg-gradient-to-br from-gray-50/50 to-slate-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        {/* Students */}
+        <button
+          type="button"
+          onClick={() => handleStatClick('student_academic')}
+          className={`text-left bg-white/80 backdrop-blur-lg rounded-xl border ${activeFilter==='student_academic' ? 'border-emerald-300 ring-2 ring-emerald-200' : 'border-white/20'} shadow-lg p-6 relative overflow-hidden group hover:shadow-xl transition-all duration-300`}
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/50 to-green-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <div className="relative z-10 text-center">
-            <div className="text-3xl font-bold bg-gradient-to-r from-gray-600 to-slate-600 bg-clip-text text-transparent mb-1">
-              {userStats.regular}
+            <div className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent mb-1">
+              {serverStats.students}
             </div>
-            <div className="text-sm font-semibold text-gray-600">Regular Users</div>
-            <div className="text-2xl mt-2">👤</div>
+            <div className="text-sm font-semibold text-gray-600">Students</div>
+            <div className="text-2xl mt-2">🎓</div>
           </div>
-        </div>
+        </button>
       </div>
 
       {/* Modern Search */}

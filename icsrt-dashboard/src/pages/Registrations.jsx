@@ -3,6 +3,8 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FaCheck, FaTimes, FaClock, FaEye, FaEdit, FaTrash } from 'react-icons/fa';
 import { api } from '../lib/api';
+import { useToast } from '../context/ToastContext';
+import { useConfirm } from '../context/ConfirmContext';
 
 const Registrations = () => {
   const [data, setData] = useState([]);
@@ -10,6 +12,8 @@ const Registrations = () => {
   const [selected, setSelected] = useState(null);
   const [activeTab, setActiveTab] = useState('registrations'); // 'registrations' or 'users'
   const [statusFilter, setStatusFilter] = useState('all'); // all, pending, approved, rejected
+  const toast = useToast();
+  const confirm = useConfirm();
 
   useEffect(() => {
     // Fetch conference registrations
@@ -58,9 +62,8 @@ const Registrations = () => {
       ? 'Are you sure you want to approve this user registration?' 
       : 'Are you sure you want to reject this user registration?';
     
-    if (!window.confirm(confirmMessage)) {
-      return;
-    }
+  const ok = await confirm({ title: 'Confirm action', message: confirmMessage, confirmText: action === 'approve' ? 'Approve' : 'Reject' });
+  if (!ok) return;
 
     try {
       const endpoint = action === 'approve' ? 'approve' : 'reject';
@@ -83,26 +86,27 @@ const Registrations = () => {
         }));
       }
 
-      alert(`User ${action}d successfully!`);
+  toast.success(`User ${action}d successfully!`);
     } catch (err) {
       console.error(`Error ${action}ing user:`, err);
-      alert(`Failed to ${action} user: ` + err.message);
+  toast.error(`Failed to ${action} user: ` + err.message);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this registration?')) return;
+    const ok = await confirm({ title: 'Delete registration?', message: 'This action cannot be undone.', confirmText: 'Delete' });
+    if (!ok) return;
     try {
       const res = await api.del(`/api/registrations/${id}`);
       if (res && (res.ok || res.success !== false)) {
         setData(data.filter(item => item._id !== id));
-        alert('Registration deleted.');
+        toast.success('Registration deleted.');
       } else {
-        alert('Failed to delete.');
+        toast.error('Failed to delete.');
       }
     } catch (err) {
       console.error(err);
-      alert('Error occurred while deleting.');
+      toast.error('Error occurred while deleting.');
     }
   };
 

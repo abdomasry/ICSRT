@@ -119,15 +119,20 @@ const PurchasePage = () => {
         paymentMethod: 'paymob',
         billingInfo: billingInfo,
         couponCode: appliedCoupon?.code,
-        currency: 'USD',
+        // Paymob supports EGP; backend template uses EGP in payment key
+        currency: 'EGP',
         purchaseToken: token
       });
       
-      if (data.success) {
+      if (data?.success) {
+        // If Paymob iframe URL is available, redirect the user to complete payment
+        if (data.paymentUrl) {
+          window.location.href = data.paymentUrl;
+          return;
+        }
+        // Fallback: show success initiation but no redirect (e.g., sandbox keys not set)
         setSuccess(true);
-        setTimeout(() => {
-          navigate('/'); // Redirect to home or thank you page
-        }, 3000);
+        // Keep the user on this page; don’t auto-redirect to home so they can retry
       } else {
         alert(data.error || 'Failed to process payment');
       }

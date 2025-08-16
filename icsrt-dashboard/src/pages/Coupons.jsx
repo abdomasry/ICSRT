@@ -1,9 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../lib/api';
+import { useToast } from '../context/ToastContext';
+import { useConfirm } from '../context/ConfirmContext';
 import { useAuth } from '../context/AuthContext';
+import Pagination from '../components/Pagination';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const Coupons = () => {
   const { hasPermission } = useAuth();
+  const confirm = useConfirm();
+  const toast = useToast();
   const { hasPermission: checkPerm } = useAuth();
   const canView = checkPerm('coupons', 'view');
   const canCreate = checkPerm('coupons', 'create');
@@ -15,13 +21,36 @@ const Coupons = () => {
   const [error, setError] = useState('');
   const [form, setForm] = useState({ code: '', discountType: 'percentage', discountValue: '', minimumAmount: '', expiresAt: '', isActive: true, description: '' });
   const [saving, setSaving] = useState(false);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [total, setTotal] = useState(0);
+  const [search, setSearch] = useState('');
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  const load = async () => {
+  // Sync state from URL (no eslint disable needed)
+  useEffect(() => {
+    const sp = new URLSearchParams(location.search);
+    const qsPage = parseInt(sp.get('page') || '1', 10);
+    const qsLimit = parseInt(sp.get('limit') || '20', 10);
+    const qsSearch = sp.get('search') || '';
+    if (Number.isFinite(qsPage) && qsPage !== page) setPage(qsPage);
+    if (Number.isFinite(qsLimit) && qsLimit !== limit) setLimit(qsLimit);
+    if (qsSearch !== search) setSearch(qsSearch);
+  }, [location.search]);
+
+  const load = async (p = page, l = limit, q = search) => {
     try {
       setLoading(true);
       setError('');
-      const res = await api.get('/api/admin/coupons');
+      const params = new URLSearchParams();
+      params.set('page', String(p));
+      params.set('limit', String(l));
+      if (q) params.set('search', q);
+      const res = await api.getJson(`/api/admin/coupons?${params.toString()}`);
       setCoupons(res?.coupons || []);
+      const pg = res?.pagination || {};
+      setTotal(parseInt(pg.total || (res?.coupons?.length ?? 0)));
     } catch (e) {
       setError(e.message || 'Failed to load coupons');
     } finally {
@@ -29,11 +58,20 @@ const Coupons = () => {
     }
   };
 
-  useEffect(() => { if (canView) load(); }, [canView]);
+  useEffect(() => { if (canView) load(page, limit, search); }, [canView, page, limit, search]);
+
+  // Sync URL when filters change
+  useEffect(() => {
+    const params = new URLSearchParams();
+    params.set('page', String(page));
+    params.set('limit', String(limit));
+    if (search) params.set('search', search);
+    navigate({ search: params.toString() }, { replace: true });
+  }, [page, limit, search, navigate]);
 
   const save = async () => {
     if (!form.code || !form.discountType || !form.discountValue) return;
-    if (!(canCreate || canEdit)) { alert('You do not have permission to save coupons.'); return; }
+  if (!(canCreate || canEdit)) { toast.warning('You do not have permission to save coupons.'); return; }
     try {
       setSaving(true);
       const body = { ...form };
@@ -43,27 +81,48 @@ const Coupons = () => {
       if (body.minimumAmount) body.minimumAmount = Number(body.minimumAmount);
       const res = await api.post('/api/admin/coupons', body);
       if (res?.success) {
-        await load();
+  await load(1, limit, search);
         setForm({ code: '', discountType: 'percentage', discountValue: '', minimumAmount: '', expiresAt: '', isActive: true, description: '' });
-        alert('Coupon saved');
+        toast.success('Coupon saved');
       } else {
-        alert('Failed to save coupon: ' + (res?.error || 'Unknown error'));
+        toast.error('Failed to save coupon: ' + (res?.error || 'Unknown error'));
       }
     } catch (e) {
-      alert(e.message || 'Failed to save coupon');
+      toast.error(e.message || 'Failed to save coupon');
     } finally {
       setSaving(false);
     }
   };
 
   const deactivate = async (code) => {
-    if (!window.confirm('Deactivate this coupon?')) return;
-    if (!canDelete && !canEdit) { alert('You do not have permission to deactivate coupons.'); return; }
+    const ok = await confirm({ title: 'Deactivate this coupon?', message: `Coupon code: ${code}`, confirmText: 'Deactivate' });
+    if (!ok) return;
+    if (!canDelete && !canEdit) { toast.warning('You do not have permission to deactivate coupons.'); return; }
     try {
       await api.post(`/api/admin/coupons/${code}/deactivate`, {});
-      await load();
+      await load(page, limit, search);
+      toast.success('Coupon deactivated');
     } catch (e) {
-      alert('Failed to deactivate');
+      toast.error('Failed to deactivate');
+    }
+  };
+
+  const removeCoupon = async (code) => {
+    const ok = await confirm({ title: 'Delete coupon?', message: `Coupon code: ${code}\nThis cannot be undone.`, confirmText: 'Delete' });
+    if (!ok) return;
+    if (!canDelete) { toast.warning('You do not have permission to delete coupons.'); return; }
+    try {
+      await api.delJson(`/api/admin/coupons/${code}`);
+      // If we deleted the last item on the page, move back a page if possible
+      const nextCount = coupons.length - 1;
+      if (nextCount <= 0 && page > 1) {
+        setPage(page - 1);
+      } else {
+        await load(page, limit, search);
+      }
+      toast.success('Coupon deleted');
+    } catch (e) {
+      toast.error(e.message || 'Failed to delete');
     }
   };
 
@@ -110,7 +169,15 @@ const Coupons = () => {
   )}
 
       <div className="bg-white rounded-xl border p-4">
-        <h2 className="text-lg font-semibold mb-3">Existing Coupons</h2>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-3">
+          <h2 className="text-lg font-semibold">Existing Coupons</h2>
+          <div className="flex items-center gap-2">
+            <input value={search} onChange={(e)=>{ setPage(1); setSearch(e.target.value); }} placeholder="Search code/description" className="border rounded px-3 py-2" />
+            <select value={String(limit)} onChange={(e)=>{ setPage(1); setLimit(parseInt(e.target.value, 10)); }} className="border rounded px-3 py-2">
+              {[10,20,50,100].map(n => (<option key={n} value={n}>{n}/page</option>))}
+            </select>
+          </div>
+        </div>
         {coupons.length === 0 ? (
           <div className="text-gray-500">No coupons yet</div>
         ) : (
@@ -129,11 +196,23 @@ const Coupons = () => {
                   {c.isActive && (canDelete || canEdit) && (
                     <button onClick={()=>deactivate(c.code)} className="px-3 py-1 bg-gray-200 rounded">Deactivate</button>
                   )}
+                  {canDelete && (
+                    <button onClick={()=>removeCoupon(c.code)} className="px-3 py-1 bg-red-600 text-white rounded">Delete</button>
+                  )}
                 </div>
               </div>
             ))}
           </div>
         )}
+        <div className="pt-4">
+          <Pagination
+            page={page}
+            pageSize={limit}
+            total={total}
+            onPageChange={setPage}
+            onPageSizeChange={(n)=>{ setPage(1); setLimit(n); }}
+          />
+        </div>
       </div>
     </div>
   );

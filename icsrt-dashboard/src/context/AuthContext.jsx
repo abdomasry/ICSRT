@@ -105,7 +105,8 @@ export const AuthProvider = ({ children }) => {
       'faq',
       'contacts',
       'tickets', // allow access to support tickets for content admins by default
-      'social-media', // allow social media management
+  'social-media', // allow social media management
+  'collaborations', // allow managing researcher submissions
     ];
     
     // Regular admin cannot access these sections

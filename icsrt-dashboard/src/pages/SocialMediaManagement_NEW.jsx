@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useToast } from '../context/ToastContext';
 import { 
   FaFacebook, 
   FaTwitter, 
@@ -25,6 +26,8 @@ import {
   FaCheckCircle,
   FaExclamationTriangle
 } from 'react-icons/fa';
+import { api } from '../lib/api';
+import { useConfirm } from '../context/ConfirmContext';
 
 const SocialMediaManagement = () => {
   const [socialLinks, setSocialLinks] = useState([]);
@@ -33,8 +36,8 @@ const SocialMediaManagement = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingLink, setEditingLink] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-
-  const API_BASE_URL = 'http://localhost:3000';
+  const toast = useToast();
+  const confirm = useConfirm();
 
   // Form state
   const [formData, setFormData] = useState({
@@ -73,16 +76,8 @@ const SocialMediaManagement = () => {
       setLoading(true);
       setError('');
       
-      console.log('🔄 Fetching social links from API...');
-      const response = await fetch(`${API_BASE_URL}/api/social-links`);
-      
-      console.log('📡 Response status:', response.status);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
+  console.log('🔄 Fetching social links from API...');
+  const data = await api.get('/api/social-links');
       console.log('📦 API response:', data);
       
       if (data.success && Array.isArray(data.data)) {
@@ -94,7 +89,7 @@ const SocialMediaManagement = () => {
       }
     } catch (error) {
       console.error('❌ Error fetching social links:', error);
-      setError('Failed to connect to server. Please ensure the server is running on port 3000.');
+  setError('Failed to connect to server.');
       setSocialLinks([]);
     } finally {
       setLoading(false);
@@ -162,7 +157,7 @@ const SocialMediaManagement = () => {
     e.preventDefault();
     
     if (!formData.platform || !formData.url) {
-      alert('❌ Platform and URL are required');
+      toast.warning('Platform and URL are required');
       return;
     }
     
@@ -170,87 +165,49 @@ const SocialMediaManagement = () => {
       setSubmitting(true);
       
       const url = editingLink 
-        ? `${API_BASE_URL}/api/social-links/${editingLink._id}`
-        : `${API_BASE_URL}/api/social-links`;
-      
+        ? `/api/social-links/${editingLink._id}`
+        : `/api/social-links`;
       const method = editingLink ? 'PUT' : 'POST';
-      
       console.log(`🔄 ${method} request to:`, url);
       console.log('📝 Submitting data:', formData);
-      
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify(formData)
-      });
-
-      console.log('📡 Submit response status:', response.status);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ Server error response:', errorText);
-        throw new Error(`HTTP ${response.status}: ${errorText}`);
-      }
-
-      const data = await response.json();
+      const data = method === 'PUT' ? await api.put(url, formData) : await api.post(url, formData);
       console.log('📦 Submit response data:', data);
-
-      if (data.success) {
-        alert(`✅ Social link ${editingLink ? 'updated' : 'created'} successfully!`);
+      if (data?.success || data?._id) {
+        toast.success(`Social link ${editingLink ? 'updated' : 'created'} successfully!`);
         fetchSocialLinks();
         handleCloseModal();
       } else {
         console.error('❌ Server returned error:', data);
-        alert(`❌ Failed to ${editingLink ? 'update' : 'create'} social link: ${data.error || data.message || 'Unknown error'}`);
+        toast.error(`Failed to ${editingLink ? 'update' : 'create'} social link: ${data.error || data.message || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('❌ Error submitting social link:', error);
-      alert(`❌ Error ${editingLink ? 'updating' : 'creating'} social link: ${error.message}`);
+      toast.error(`Error ${editingLink ? 'updating' : 'creating'} social link: ${error.message}`);
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDelete = async (linkId) => {
-    if (!window.confirm('Are you sure you want to delete this social link? This action cannot be undone.')) {
-      return;
-    }
+  const ok = await confirm({ title: 'Delete social link?', message: 'This action cannot be undone.', confirmText: 'Delete' });
+  if (!ok) return;
     
     try {
       console.log(`🗑️ Deleting social link: ${linkId}`);
       
-      const response = await fetch(`${API_BASE_URL}/api/social-links/${linkId}`, {
-        method: 'DELETE',
-        headers: {
-          'Accept': 'application/json',
-        }
-      });
-
-      console.log('📡 Delete response status:', response.status);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ Server error response:', errorText);
-        throw new Error(`HTTP ${response.status}: ${errorText}`);
-      }
-
-      const data = await response.json();
-      console.log('📦 Delete response data:', data);
-
-      if (data.success) {
+  const data = await api.del(`/api/social-links/${linkId}`);
+  console.log('📦 Delete response data:', data);
+  if (data?.success !== false) {
         console.log('✅ Successfully deleted social link');
-        alert('✅ Social link deleted successfully!');
+        toast.success('Social link deleted successfully!');
         fetchSocialLinks();
       } else {
         console.error('❌ Server returned error:', data);
-        alert(`❌ Failed to delete social link: ${data.error || data.message || 'Unknown error'}`);
+        toast.error(`Failed to delete social link: ${data.error || data.message || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('❌ Error deleting social link:', error);
-      alert(`❌ Error deleting social link: ${error.message}`);
+      toast.error(`Error deleting social link: ${error.message}`);
     }
   };
 
@@ -258,43 +215,18 @@ const SocialMediaManagement = () => {
     try {
       console.log(`🔄 Toggling social link ${link._id} enabled status from ${link.enabled} to ${!link.enabled}`);
       
-      const updateData = {
-        ...link,
-        enabled: !link.enabled
-      };
-      
-      console.log('📝 Sending update data:', updateData);
-      
-      const response = await fetch(`${API_BASE_URL}/api/social-links/${link._id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify(updateData)
-      });
-
-      console.log('📡 Toggle response status:', response.status);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ Server error response:', errorText);
-        throw new Error(`HTTP ${response.status}: ${errorText}`);
-      }
-
-      const data = await response.json();
-      console.log('📦 Toggle response data:', data);
-
-      if (data.success) {
+  const data = await api.put(`/api/social-links/${link._id}`, { ...link, enabled: !link.enabled });
+  console.log('📦 Toggle response data:', data);
+  if (data?.success || data?._id) {
         console.log('✅ Successfully toggled social link status');
         fetchSocialLinks();
       } else {
         console.error('❌ Server returned error:', data);
-        alert(`❌ Failed to update social link: ${data.error || data.message || 'Unknown error'}`);
+        toast.error(`Failed to update social link: ${data.error || data.message || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('❌ Error toggling social link:', error);
-      alert(`❌ Error updating social link: ${error.message}`);
+      toast.error(`Error updating social link: ${error.message}`);
     }
   };
 

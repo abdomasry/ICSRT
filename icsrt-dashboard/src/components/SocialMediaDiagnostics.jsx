@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
+import { API_BASE_URL } from '../lib/api';
 
 const SocialMediaDiagnostics = () => {
   const [diagnosticResults, setDiagnosticResults] = useState([]);
   const [isRunning, setIsRunning] = useState(false);
 
-  const API_BASE_URL = 'http://localhost:3000';
+  // Uses environment API base URL
 
   const addResult = (test, status, message, data = null) => {
     setDiagnosticResults(prev => [...prev, {

@@ -17,10 +17,11 @@ function addServiceOrderPurchaseAPI(app, connectDB) {
       const { 
         userEmail, 
         paymentMethod = 'paymob',
-  billingInfo,
-        couponCode,
-  currency = 'EGP' // Paymob typically uses EGP; adjust as needed
+        billingInfo,
+        couponCode
       } = req.body;
+      // Always enforce EGP for Paymob to avoid currency mismatch
+      const currency = 'EGP';
       
       if (!userEmail) {
         return res.status(400).json({ 

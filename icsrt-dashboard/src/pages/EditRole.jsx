@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api } from '../lib/api';
+import { useToast } from '../context/ToastContext';
 
 const EditRole = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const toast = useToast();
   const [form, setForm] = useState({
     name: '',
     description: '',
@@ -39,12 +41,12 @@ const EditRole = () => {
           permissions: permissions
         });
       } else {
-        alert('Role not found');
+        toast.error('Role not found');
         navigate('/roles');
       }
     } catch (error) {
       console.error('Error fetching role:', error);
-      alert('Error loading role data');
+      toast.error('Error loading role data');
       navigate('/roles');
     } finally {
       setIsLoadingData(false);
@@ -61,15 +63,15 @@ const EditRole = () => {
     setIsLoading(true);
 
     try {
-      const res = await api.put(`/api/roles/${id}`, {
+  const res = await api.put(`/api/roles/${id}`, {
         ...form,
         updatedAt: new Date().toISOString()
       });
-      alert('Role updated successfully!');
+  toast.success('Role updated successfully!');
       navigate('/roles');
     } catch (err) {
       console.error(err);
-      alert(err.message || 'Error occurred while updating role.');
+  toast.error(err.message || 'Error occurred while updating role.');
     } finally {
       setIsLoading(false);
     }

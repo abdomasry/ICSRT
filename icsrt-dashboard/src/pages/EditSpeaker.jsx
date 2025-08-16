@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useToast } from '../context/ToastContext';
+import { api } from '../lib/api';
 
 const EditSpeaker = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: '', title: '', image: '', country: '', bio: '' });
+  const toast = useToast();
 
   useEffect(() => {
-    fetch(`http://localhost:3000/api/speakers/${id}`)
-      .then(res => res.json())
+    api.get(`/api/speakers/${id}`)
       .then(setForm)
       .catch(err => console.error('Fetch error:', err));
   }, [id]);
@@ -21,20 +23,12 @@ const EditSpeaker = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch(`http://localhost:3000/api/speakers/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
-      });
-      if (res.ok) {
-        alert('Speaker updated successfully!');
+      await api.put(`/api/speakers/${id}`, form);
+        toast.success('Speaker updated successfully!');
         navigate('/speakers');
-      } else {
-        alert('Failed to update speaker.');
-      }
     } catch (err) {
       console.error(err);
-      alert('An error occurred while updating.');
+      toast.error('An error occurred while updating.');
     }
   };
 

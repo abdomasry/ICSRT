@@ -43,8 +43,39 @@ function addCouponAPI(app, connectDB) {
   app.get('/api/admin/coupons', async (req, res) => {
     try {
       const database = await connectDB();
-      const items = await database.collection('coupons').find({}).sort({ updatedAt: -1 }).toArray();
-      return res.json({ success: true, coupons: items });
+      const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+      const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 20));
+      const search = (req.query.search || '').trim();
+      const sortBy = req.query.sortBy || 'updatedAt';
+      const sortOrder = String(req.query.sortOrder).toLowerCase() === 'asc' ? 1 : -1;
+
+      const filter = {};
+      if (search) {
+        filter.$or = [
+          { code: { $regex: search, $options: 'i' } },
+          { description: { $regex: search, $options: 'i' } }
+        ];
+      }
+
+      const coll = database.collection('coupons');
+      const total = await coll.countDocuments(filter);
+      const cursor = coll
+        .find(filter)
+        .sort({ [sortBy]: sortOrder })
+        .skip((page - 1) * limit)
+        .limit(limit);
+      const items = await cursor.toArray();
+
+      return res.json({
+        success: true,
+        coupons: items,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.max(1, Math.ceil(total / limit))
+        }
+      });
     } catch (error) {
       console.error('List coupons error:', error);
       return res.status(500).json({ success: false, error: 'Failed to list coupons' });
@@ -65,6 +96,20 @@ function addCouponAPI(app, connectDB) {
     } catch (error) {
       console.error('Deactivate coupon error:', error);
       return res.status(500).json({ success: false, error: 'Failed to deactivate coupon' });
+    }
+  });
+
+  // Admin: delete coupon
+  app.delete('/api/admin/coupons/:code', async (req, res) => {
+    try {
+      const database = await connectDB();
+      const code = String(req.params.code).toUpperCase();
+      const r = await database.collection('coupons').deleteOne({ code });
+      if (!r.deletedCount) return res.status(404).json({ success: false, error: 'Coupon not found' });
+      return res.json({ success: true, deleted: code });
+    } catch (error) {
+      console.error('Delete coupon error:', error);
+      return res.status(500).json({ success: false, error: 'Failed to delete coupon' });
     }
   });
 

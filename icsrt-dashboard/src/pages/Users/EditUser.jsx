@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../../lib/api';
+import { useToast } from '../../context/ToastContext';
 
 const EditUser = () => {
+  const toast = useToast();
   const { id } = useParams();
   const navigate = useNavigate();
   const [form, setForm] = useState({
@@ -64,12 +66,22 @@ const EditUser = () => {
     setSaving(true);
 
     try {
-      const data = await api.put(`/api/admin/users/${id}`, form);
-      alert('User updated successfully!');
+      const payload = {
+        fullName: form.fullName,
+        email: form.email,
+        phone: form.phone,
+        institution: form.institution,
+        country: form.country,
+        userType: form.userType,
+        status: form.isActive ? 'active' : 'inactive'
+      };
+      const data = await api.put(`/api/users/${id}`, payload);
+  toast.success('User updated successfully!');
       navigate('/users');
     } catch (err) {
       console.error('Error updating user:', err);
       setError(err.message || 'Failed to update user');
+  toast.error(err.message || 'Failed to update user');
     } finally {
       setSaving(false);
     }
@@ -207,12 +219,9 @@ const EditUser = () => {
               disabled={saving}
               className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
             >
-              <option value="">Select Type</option>
-              <option value="Academic">Academic</option>
-              <option value="Student">Student</option>
-              <option value="Researcher">Researcher</option>
-              <option value="Industry">Industry</option>
-              <option value="Other">Other</option>
+                <option value="">Select User Type *</option>
+                <option value="student_academic">Student / Academic</option>
+                <option value="researcher_professional">Researcher / Professional</option>
             </select>
           </div>
           

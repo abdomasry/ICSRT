@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../lib/api';
 import { 
   FaFacebook, 
   FaTwitter, 
@@ -34,7 +35,7 @@ const SocialMediaManagement = () => {
   const [editingLink, setEditingLink] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const API_BASE_URL = 'http://localhost:3000';
+  // Deprecated: legacy page kept for reference/tests. Uses environment API_BASE_URL.
 
   // Form state
   const [formData, setFormData] = useState({
@@ -71,7 +72,7 @@ const SocialMediaManagement = () => {
       setError(null);
       
       console.log('🔄 Fetching social media links...');
-      const response = await fetch('http://localhost:3000/api/social-links');
+  const response = await fetch(`${API_BASE_URL}/api/social-links`);
       
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -106,8 +107,8 @@ const SocialMediaManagement = () => {
       setLoading(true);
       
       const url = editingLink 
-        ? `http://localhost:3000/api/social-links/${editingLink._id}`
-        : 'http://localhost:3000/api/social-links';
+        ? `${API_BASE_URL}/api/social-links/${editingLink._id}`
+        : `${API_BASE_URL}/api/social-links`;
       
       const method = editingLink ? 'PUT' : 'POST';
       
@@ -153,7 +154,7 @@ const SocialMediaManagement = () => {
       setLoading(true);
       
       console.log(`🔄 Deleting social link: ${id}`);
-      const response = await fetch(`http://localhost:3000/api/social-links/${id}`, {
+  const response = await fetch(`${API_BASE_URL}/api/social-links/${id}`, {
         method: 'DELETE',
       });
       

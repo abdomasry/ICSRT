@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useToast } from '../context/ToastContext';
+import { api } from '../lib/api';
 
 const EditAdmin = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const toast = useToast();
   const [form, setForm] = useState({ 
     name: '', 
     email: '', 
@@ -26,11 +29,8 @@ const EditAdmin = () => {
   const fetchRoles = async () => {
     try {
       setLoadingRoles(true);
-      const response = await fetch('http://localhost:3000/api/roles');
-      if (response.ok) {
-        const data = await response.json();
-        setRoles(Array.isArray(data) ? data : (data?.data || []));
-      }
+      const data = await api.get('/api/roles');
+      setRoles(Array.isArray(data) ? data : (data?.data || []));
     } catch (error) {
       console.error('Error fetching roles:', error);
     } finally {
@@ -40,25 +40,19 @@ const EditAdmin = () => {
 
   const fetchAdmin = async () => {
     try {
-      const res = await fetch(`http://localhost:3000/api/admins/${id}`);
-      if (res.ok) {
-        const data = await res.json();
-        setForm({
-          name: data.name || '',
-          email: data.email || '',
-          password: data.password || '', // Keep existing password visible for simple setup
-          phone: data.phone || '',
-          type: data.type || 'admin',
-          roleId: data.role_id || '', // Add role_id field
-          permissions: data.permissions || ''
-        });
-      } else {
-        alert('Failed to load admin data');
-        navigate('/admins');
-      }
+      const data = await api.get(`/api/admins/${id}`);
+      setForm({
+        name: data.name || '',
+        email: data.email || '',
+        password: data.password || '', // Keep existing password visible for simple setup
+        phone: data.phone || '',
+        type: data.type || 'admin',
+        roleId: data.role_id || '', // Add role_id field
+        permissions: data.permissions || ''
+      });
     } catch (err) {
       console.error('Fetch error:', err);
-      alert('Error loading admin data');
+      toast.error('Error loading admin data');
       navigate('/admins');
     } finally {
       setLoading(false);
@@ -86,22 +80,12 @@ const EditAdmin = () => {
         updatedBy: 'system'
       };
 
-      const res = await fetch(`http://localhost:3000/api/admins/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(adminData)
-      });
-
-      if (res.ok) {
-        alert('Admin updated successfully!');
-        navigate('/admins');
-      } else {
-        const errorData = await res.json();
-        alert(errorData.error || 'Failed to update admin.');
-      }
+  await api.put(`/api/admins/${id}`, adminData);
+  toast.success('Admin updated successfully!');
+  navigate('/admins');
     } catch (err) {
       console.error(err);
-      alert(err.message || 'Error occurred while updating admin.');
+  toast.error(err.message || 'Error occurred while updating admin.');
     } finally {
       setIsLoading(false);
     }

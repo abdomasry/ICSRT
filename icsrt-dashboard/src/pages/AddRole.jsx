@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
+import { useToast } from '../context/ToastContext';
 
 const AddRole = () => {
   const navigate = useNavigate();
+  const toast = useToast();
   const [form, setForm] = useState({
     name: '',
     description: '',
@@ -65,12 +67,12 @@ const AddRole = () => {
         createdBy: 'super_admin'
       });
       if (res) {
-        alert('Role created successfully!');
+        toast.success('Role created successfully!');
         navigate('/roles');
       }
     } catch (err) {
       console.error(err);
-      alert(err.message || 'Error occurred while creating role.');
+      toast.error(err.message || 'Error occurred while creating role.');
     } finally {
       setIsLoading(false);
     }

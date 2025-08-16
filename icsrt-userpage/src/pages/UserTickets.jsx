@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useUser } from '../context/UserContext';
 import { useLanguage } from '../context/LanguageContext';
 // Using global Navbar from Layout, so remove local header controls
@@ -44,65 +44,6 @@ const UserTickets = () => {
   const [sendingReply, setSendingReply] = useState(false);
   const [showReplyForm, setShowReplyForm] = useState(false);
 
-  // Demo tickets for fallback when server is not available
-  const demoTickets = useMemo(() => ([
-    {
-      _id: 'demo-ticket-1',
-      ticketId: 'TKT-2024-001',
-      subject: 'Conference Registration Issue',
-      message: 'I am having trouble registering for the upcoming ICSRT conference. The payment gateway seems to be not working properly.',
-      category: 'technical',
-      priority: 'high',
-      status: 'open',
-      userEmail: user?.email || 'demo@icsrt.com',
-      createdAt: '2024-07-20T10:00:00Z',
-      updatedAt: '2024-07-20T10:00:00Z',
-      responses: []
-    },
-    {
-      _id: 'demo-ticket-2',
-      ticketId: 'TKT-2024-002',
-      subject: 'Paper Submission Query',
-      message: 'What is the deadline for paper submissions? I couldn\'t find clear information on the website.',
-      category: 'general',
-      priority: 'medium',
-      status: 'in-progress',
-      userEmail: user?.email || 'demo@icsrt.com',
-      createdAt: '2024-07-18T14:30:00Z',
-      updatedAt: '2024-07-19T09:15:00Z',
-      responses: [
-        {
-          _id: 'response-1',
-          message: 'Thank you for your inquiry. The paper submission deadline is August 15, 2024.',
-          isAdminResponse: true,
-          adminName: 'Support Team',
-          createdAt: '2024-07-19T09:15:00Z'
-        }
-      ]
-    },
-    {
-      _id: 'demo-ticket-3',
-      ticketId: 'TKT-2024-003',
-      subject: 'Account Access Problem',
-      message: 'I forgot my password and the reset email is not coming through.',
-      category: 'account',
-      priority: 'medium',
-      status: 'resolved',
-      userEmail: user?.email || 'demo@icsrt.com',
-      createdAt: '2024-07-15T11:45:00Z',
-      updatedAt: '2024-07-16T16:20:00Z',
-      responses: [
-        {
-          _id: 'response-2',
-          message: 'We have reset your password. Please check your email for the new temporary password.',
-          isAdminResponse: true,
-          adminName: 'Technical Support',
-          createdAt: '2024-07-16T16:20:00Z'
-        }
-      ]
-    }
-  ]), [user?.email]);
-
   // Demo user email for testing (when not logged in)
   const userEmail = user?.email || 'demo@icsrt.com';
 
@@ -119,7 +60,7 @@ const UserTickets = () => {
       if (isLoggedIn) {
         try {
           const data = await api.get('/api/user/tickets');
-          if (Array.isArray(data) && data.length > 0) {
+          if (Array.isArray(data)) {
             fetched = data;
             success = true;
             console.log('Token-based fetch successful:', data.length, 'tickets');
@@ -133,7 +74,7 @@ const UserTickets = () => {
       if (!success) {
         try {
           const data = await api.get(`/api/user/tickets?userEmail=${encodeURIComponent(userEmail)}`);
-          if (Array.isArray(data) && data.length > 0) {
+          if (Array.isArray(data)) {
             fetched = data;
             success = true;
             console.log('Email-based fetch successful:', data.length, 'tickets');
@@ -143,23 +84,24 @@ const UserTickets = () => {
         }
       }
 
-      if (success && fetched.length > 0) {
-        setTickets(fetched);
+      if (success) {
+        // Accept empty results as valid (new account = zero tickets)
+        setTickets(Array.isArray(fetched) ? fetched : []);
         setError('');
       } else {
-        console.log('No tickets found, using demo data');
-        setTickets(demoTickets);
-        setError('No tickets found in database. Showing demo data. Try creating a new ticket to see it appear here.');
+        // Server not reachable or unexpected response
+        console.log('Tickets fetch failed');
+        setTickets([]);
+        setError('Failed to connect to server.');
       }
     } catch (error) {
       console.error('Error fetching tickets:', error);
-      // Fallback to demo data when server is not reachable
-      setTickets(demoTickets);
-      setError('Server connection failed. Showing demo data.');
+      setTickets([]);
+      setError('Server connection failed.');
     } finally {
       setLoading(false);
     }
-  }, [userEmail, isLoggedIn, demoTickets]);
+  }, [userEmail, isLoggedIn]);
 
   useEffect(() => {
     fetchUserTickets();

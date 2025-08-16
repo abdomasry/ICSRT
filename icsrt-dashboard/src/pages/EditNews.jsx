@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useToast } from '../context/ToastContext';
+import { api } from '../lib/api';
 
 const EditNews = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const toast = useToast();
   const [form, setForm] = useState({ title: '', date: '', summary: '', content: '' });
 
   useEffect(() => {
-    fetch(`http://localhost:3000/api/news/${id}`)
-      .then(res => res.json())
+    api.get(`/api/news/${id}`)
       .then(setForm)
       .catch(err => console.error('Fetch error:', err));
   }, [id]);
@@ -21,20 +23,12 @@ const EditNews = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch(`http://localhost:3000/api/news/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
-      });
-      if (res.ok) {
-        alert('News updated successfully!');
+      await api.put(`/api/news/${id}`, form);
+        toast.success('News updated successfully!');
         navigate('/news');
-      } else {
-        alert('Failed to update news.');
-      }
     } catch (err) {
       console.error(err);
-      alert('An error occurred while updating.');
+      toast.error('An error occurred while updating.');
     }
   };
 

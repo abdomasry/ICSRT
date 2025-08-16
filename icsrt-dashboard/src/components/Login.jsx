@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { api } from '../lib/api';
 
 const Login = ({ onLogin }) => {
   const [credentials, setCredentials] = useState({ username: '', password: '' });
@@ -37,10 +38,8 @@ const Login = ({ onLogin }) => {
 
       // Check against database admins (only if server is running)
       try {
-        const response = await fetch('http://localhost:3000/api/admins');
-        if (response.ok) {
-          const data = await response.json();
-          const admins = Array.isArray(data) ? data : (data?.data || []);
+        const data = await api.get('/api/admins');
+        const admins = Array.isArray(data) ? data : (data?.data || []);
           
           const admin = admins.find(a => {
             return (
@@ -56,13 +55,8 @@ const Login = ({ onLogin }) => {
             let roleData = null;
             if (admin.role_id) {
               try {
-                const roleResponse = await fetch(`http://localhost:3000/api/roles/${admin.role_id}`);
-                if (roleResponse.ok) {
-                  const roleResult = await roleResponse.json();
-                  roleData = roleResult.data || roleResult;
-                } else {
-                  console.error('Failed to fetch role data, response not ok:', roleResponse.status);
-                }
+                const roleResult = await api.get(`/api/roles/${admin.role_id}`);
+                roleData = roleResult.data || roleResult;
               } catch (roleErr) {
                 console.error('Error fetching role data:', roleErr);
               }
@@ -90,10 +84,6 @@ const Login = ({ onLogin }) => {
           } else {
             setError('Invalid username or password');
           }
-        } else {
-          console.error('Server response not ok:', response.status);
-          setError('Unable to connect to server. Please make sure the backend is running.');
-        }
       } catch (serverErr) {
         console.error('Server connection error:', serverErr);
         setError('Unable to connect to server. Please make sure the backend is running on port 3000.');

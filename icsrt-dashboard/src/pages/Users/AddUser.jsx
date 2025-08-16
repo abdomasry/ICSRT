@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../lib/api';
+import { useToast } from '../../context/ToastContext';
 
 const AddUser = () => {
   const [form, setForm] = useState({
@@ -13,6 +14,7 @@ const AddUser = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const toast = useToast();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -38,13 +40,13 @@ const AddUser = () => {
     }
 
     try {
-      const data = await api.post('/api/users', {
+  const data = await api.post('/api/users', {
         name: form.name,
         email: form.email,
         phone: form.phone,
         password: form.password,
       });
-      alert('User created successfully!');
+  toast.success('User created successfully!');
       navigate('/users');
     } catch (err) {
       console.error('Error creating user:', err);

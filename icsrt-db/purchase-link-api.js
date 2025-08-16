@@ -102,8 +102,9 @@ function addPurchaseLinkAPI(app, connectDB) {
         }
       );
 
-      // Generate the actual purchase URL
-      const purchaseUrl = `http://localhost:3002/purchase/${purchaseToken}`;
+  // Generate the actual purchase URL (env-driven for production)
+  const FRONTEND_BASE = process.env.FRONTEND_URL || 'http://localhost:3002';
+  const purchaseUrl = `${FRONTEND_BASE.replace(/\/$/, '')}/purchase/${purchaseToken}`;
 
       res.json({
         success: true,

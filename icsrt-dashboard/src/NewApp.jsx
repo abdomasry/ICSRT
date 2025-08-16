@@ -54,6 +54,7 @@ import UserList from "./pages/Users/UserList";
 import AddUser from "./pages/Users/AddUser";
 import UserView from "./pages/Users/UserView";
 import EditUser from "./pages/Users/EditUser";
+import Collaborations from "./pages/Collaborations";
 
 const App = () => {
   return (
@@ -236,6 +237,12 @@ const App = () => {
                 <Route path="/contact-requests" element={
                   <RequireContentAccess>
                     <ContactRequests />
+                  </RequireContentAccess>
+                } />
+
+                <Route path="/collaborations" element={
+                  <RequireContentAccess>
+                    <Collaborations />
                   </RequireContentAccess>
                 } />
 

@@ -3,11 +3,15 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import RefreshButton from '../components/RefreshButton';
 import { api } from '../lib/api';
+import { useToast } from '../context/ToastContext';
+import { useConfirm } from '../context/ConfirmContext';
 
 const Events = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const { hasPermission } = useAuth();
+  const toast = useToast();
+  const confirm = useConfirm();
 
   // Function to fetch events data
   const fetchEvents = async () => {
@@ -48,18 +52,19 @@ const Events = () => {
   }, []);
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this event?')) return;
+    const ok = await confirm({ title: 'Delete event?', message: 'This action cannot be undone.', confirmText: 'Delete' });
+    if (!ok) return;
     try {
       const res = await api.del(`/api/events/${id}`);
       if (res && (res.ok || res.success !== false)) {
         setData(data.filter(item => item._id !== id));
-        alert('Event deleted.');
+        toast.success('Event deleted.');
       } else {
-        alert('Failed to delete.');
+        toast.error('Failed to delete.');
       }
     } catch (err) {
       console.error(err);
-      alert('Error occurred while deleting.');
+      toast.error('Error occurred while deleting.');
     }
   };
 

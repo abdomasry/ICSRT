@@ -2,9 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
+import { useToast } from '../context/ToastContext';
+import { useConfirm } from '../context/ConfirmContext';
 
 const Testimonials = () => {
   const [data, setData] = useState([]);
+  const toast = useToast();
+  const confirm = useConfirm();
   const { hasPermission } = useAuth();
 
   // Check if user has view permission for testimonials
@@ -36,14 +40,15 @@ const Testimonials = () => {
   }, []);
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this testimonial?')) return;
+    const ok = await confirm({ title: 'Delete testimonial?', message: 'This action cannot be undone.', confirmText: 'Delete' });
+    if (!ok) return;
     try {
-      await api.del(`/api/testimonials/${id}`);
+  await api.del(`/api/testimonials/${id}`);
       setData(data.filter(item => item._id !== id));
-      alert('Testimonial deleted.');
+  toast.success('Testimonial deleted.');
     } catch (err) {
       console.error(err);
-      alert('Error occurred while deleting.');
+  toast.error('Error occurred while deleting.');
     }
   };
 

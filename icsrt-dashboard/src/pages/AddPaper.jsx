@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiPost, apiUpload } from '../utils/api';
+import { apiUpload } from '../utils/api';
+import { api, API_BASE_URL } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
 const AddPaper = () => {
   const navigate = useNavigate();
   const { hasPermission } = useAuth();
+  const toast = useToast();
 
   // Check if user has permission to create articles
   if (!hasPermission('papers', 'create')) {
@@ -53,23 +56,18 @@ const AddPaper = () => {
     setIsLoading(true);
     
     try {
-      // Submit as article to news/articles collection
-  const res = await apiPost('http://localhost:3000/api/news', {
+      const payload = {
         ...form,
         type: 'article',
         date: new Date().toISOString(),
         publishedAt: new Date().toISOString()
-      });
-      if (res.ok) {
-        alert('Article added successfully!');
+      };
+      await api.post('/api/news', payload);
+        toast.success('Article added successfully!');
         navigate('/papers');
-      } else {
-        const errorData = await res.json();
-        alert(errorData.error || 'Failed to add article.');
-      }
     } catch (err) {
       console.error(err);
-      alert(err.message || 'Error occurred while adding article.');
+      toast.error(err.message || 'Error occurred while adding article.');
     } finally {
       setIsLoading(false);
     }
@@ -80,11 +78,11 @@ const AddPaper = () => {
     if (!file) return;
     try {
       setUploading(true);
-      const result = await apiUpload('http://localhost:3000/api/upload', file);
+  const result = await apiUpload(`${API_BASE_URL}/api/upload`, file);
       setForm(prev => ({ ...prev, image: result.url }));
     } catch (err) {
       console.error('Upload error:', err);
-      alert('Image upload failed. Please try a smaller image (max 5MB).');
+      toast.error('Image upload failed. Please try a smaller image (max 5MB).');
     } finally {
       setUploading(false);
     }

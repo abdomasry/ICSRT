@@ -326,10 +326,8 @@ const SignUp = () => {
             dir={isRTL ? "rtl" : "ltr"}
           >
             <option value="">{isRTL ? "اختر نوع المستخدم *" : "Select User Type *"}</option>
-            <option value="student">{isRTL ? "طالب" : "Student"}</option>
-            <option value="researcher">{isRTL ? "باحث" : "Researcher"}</option>
-            <option value="academic">{isRTL ? "أكاديمي" : "Academic"}</option>
-            <option value="professional">{isRTL ? "محترف" : "Professional"}</option>
+            <option value="student_academic">{isRTL ? "طالب / أكاديمي" : "Student / Academic"}</option>
+            <option value="researcher_professional">{isRTL ? "باحث / محترف" : "Researcher / Professional"}</option>
           </select>
 
           <div className="flex items-start space-x-3">

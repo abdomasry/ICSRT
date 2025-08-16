@@ -1,11 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+import { api } from '../lib/api';
+import { useConfirm } from '../context/ConfirmContext';
 
 const FAQ = () => {
   const [data, setData] = useState([]);
   const [expandedIndex, setExpandedIndex] = useState(null);
   const { hasPermission } = useAuth();
+  const toast = useToast();
+  const confirm = useConfirm();
 
   // Check if user has view permission for FAQ
   if (!hasPermission('faq', 'view')) {
@@ -20,11 +25,9 @@ const FAQ = () => {
   }
 
   useEffect(() => {
-    // Fetch FAQ data
-    fetch('http://localhost:3000/api/faq')
-      .then(res => res.json())
+    // Fetch FAQ data via centralized helper
+    api.getJson('/api/faq')
       .then(responseData => {
-        // Handle the response structure properly
         if (Array.isArray(responseData)) {
           setData(responseData);
         } else if (responseData && Array.isArray(responseData.data)) {
@@ -34,24 +37,20 @@ const FAQ = () => {
           setData([]);
         }
       })
-      .catch(console.error);
+      .catch((e) => console.error(e));
   }, []);
 
     const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this question?')) return;
+    const ok = await confirm({ title: 'Delete question?', message: 'This cannot be undone.', confirmText: 'Delete' });
+    if (!ok) return;
     try {
-      const res = await fetch(`http://localhost:3000/api/faq/${id}`, {
-        method: 'DELETE'
-      });
-      if (res.ok) {
+      await api.del(`/api/faq/${id}`);
         setData(data.filter(item => item._id !== id));
-        alert('Question deleted.');
-      } else {
-        alert('Failed to delete.');
-      }
+        toast.success('Question deleted.');
+      
     } catch (error) {
       console.error('Error deleting FAQ:', error);
-      alert('Error deleting question.');
+      toast.error('Error deleting question.');
     }
   };
 

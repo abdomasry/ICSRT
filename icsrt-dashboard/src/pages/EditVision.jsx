@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useToast } from '../context/ToastContext';
+import { api } from '../lib/api';
 
 const EditVision = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [form, setForm] = useState({ title: '', content: '' });
+  const toast = useToast();
 
   useEffect(() => {
-    fetch(`http://localhost:3000/api/vision/${id}`)
-      .then(res => res.json())
+    api
+      .get(`/api/vision/${id}`)
       .then(setForm)
       .catch(err => console.error('Fetch error:', err));
   }, [id]);
@@ -21,20 +24,12 @@ const EditVision = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch(`http://localhost:3000/api/vision/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
-      });
-      if (res.ok) {
-        alert('Vision updated successfully!');
+      await api.put(`/api/vision/${id}`, form);
+        toast.success('Vision updated successfully!');
         navigate('/vision');
-      } else {
-        alert('Failed to update.');
-      }
     } catch (err) {
       console.error(err);
-      alert('An error occurred while updating.');
+      toast.error('An error occurred while updating.');
     }
   };
 

@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { FaKey, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
+import { useToast } from '../context/ToastContext';
 
 const ChangePassword = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const toast = useToast();
   const [form, setForm] = useState({
     currentPassword: '',
     newPassword: '',
@@ -69,7 +71,7 @@ const ChangePassword = () => {
       });
 
       if (result?.success) {
-        alert('Password changed successfully!');
+        toast.success('Password changed successfully!');
         navigate('/dashboard');
       } else {
         setError(result?.error || 'Failed to change password.');

@@ -1,11 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import RefreshButton from '../components/RefreshButton';
+import { useToast } from '../context/ToastContext';
+import { api } from '../lib/api';
+import { useConfirm } from '../context/ConfirmContext';
 
 const Admins = () => {
+  const toast = useToast();
   const [data, setData] = useState([]);
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(true);
+  const confirm = useConfirm();
 
   useEffect(() => {
     fetchAdmins();
@@ -13,20 +18,13 @@ const Admins = () => {
 
   const fetchAdmins = async () => {
     try {
-      const res = await fetch('http://localhost:3000/api/admins');
-      if (res.ok) {
-        const responseData = await res.json();
-        // Handle the response structure properly
-        if (Array.isArray(responseData)) {
-          setData(responseData);
-        } else if (responseData && Array.isArray(responseData.data)) {
-          setData(responseData.data);
-        } else {
-          console.warn('Admins API returned unexpected format:', responseData);
-          setData([]);
-        }
+      const responseData = await api.get('/api/admins');
+      if (Array.isArray(responseData)) {
+        setData(responseData);
+      } else if (responseData && Array.isArray(responseData.data)) {
+        setData(responseData.data);
       } else {
-        console.error('Failed to fetch admins');
+        console.warn('Admins API returned unexpected format:', responseData);
         setData([]);
       }
     } catch (err) {
@@ -38,21 +36,16 @@ const Admins = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this admin?')) return;
+    const ok = await confirm({ title: 'Delete admin?', message: 'This action cannot be undone.', confirmText: 'Delete' });
+    if (!ok) return;
     try {
-      const res = await fetch(`http://localhost:3000/api/admins/${id}`, {
-        method: 'DELETE'
-      });
-      if (res.ok) {
-        setData(data.filter(item => item._id !== id));
-        setSelected(null);
-        alert('Admin deleted.');
-      } else {
-        alert('Failed to delete admin.');
-      }
+      await api.del(`/api/admins/${id}`);
+      setData(data.filter(item => item._id !== id));
+      setSelected(null);
+      toast.success('Admin deleted.');
     } catch (err) {
       console.error(err);
-      alert('Error occurred while deleting.');
+      toast.error('Error occurred while deleting.');
     }
   };
 

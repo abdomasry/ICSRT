@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '../context/ToastContext';
+import { api } from '../lib/api';
 
 const AddAdmin = () => {
   const navigate = useNavigate();
+  const toast = useToast();
   const [form, setForm] = useState({ 
     name: '', 
     email: '', 
@@ -23,11 +26,8 @@ const AddAdmin = () => {
   const fetchRoles = async () => {
     try {
       setLoadingRoles(true);
-      const response = await fetch('http://localhost:3000/api/roles');
-      if (response.ok) {
-        const data = await response.json();
-        setRoles(Array.isArray(data) ? data : (data?.data || []));
-      }
+      const data = await api.get('/api/roles');
+      setRoles(Array.isArray(data) ? data : (data?.data || []));
     } catch (error) {
       console.error('Error fetching roles:', error);
     } finally {
@@ -56,22 +56,12 @@ const AddAdmin = () => {
         createdBy: 'system'
       };
 
-      const res = await fetch('http://localhost:3000/api/admins', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(adminData)
-      });
-
-      if (res.ok) {
-        alert('Admin added successfully!');
-        navigate('/admins');
-      } else {
-        const errorData = await res.json();
-        alert(errorData.error || 'Failed to add admin.');
-      }
+  await api.post('/api/admins', adminData);
+  toast.success('Admin added successfully!');
+  navigate('/admins');
     } catch (err) {
       console.error(err);
-      alert(err.message || 'Error occurred while adding admin.');
+      toast.error(err.message || 'Error occurred while adding admin.');
     } finally {
       setIsLoading(false);
     }

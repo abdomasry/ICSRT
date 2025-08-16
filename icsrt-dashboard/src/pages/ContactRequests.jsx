@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { FaEye, FaTrash, FaReply, FaEnvelope, FaCalendarAlt, FaUser, FaPhone, FaAt, FaWhatsapp, FaTicketAlt, FaExternalLinkAlt } from 'react-icons/fa';
 import Pagination from '../components/Pagination';
+import { useToast } from '../context/ToastContext';
+import { api } from '../lib/api';
+import { useConfirm } from '../context/ConfirmContext';
 
 const ContactRequests = () => {
+  const toast = useToast();
+  const confirm = useConfirm();
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -17,8 +22,7 @@ const ContactRequests = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [viewMode, setViewMode] = useState('gradient'); // 'gradient' | 'cards' | 'list'
 
-  // API Base URL
-  const API_BASE_URL = 'http://localhost:3000';
+  // API base centralized via api helper
 
   // Contact methods configuration
   const contactMethods = [
@@ -28,7 +32,7 @@ const ContactRequests = () => {
       color: 'bg-green-500 hover:bg-green-600',
       action: (contact) => {
         if (!contact.phone) {
-          alert('No phone number available for this contact');
+          toast.warning('No phone number available for this contact');
           return;
         }
         
@@ -70,25 +74,17 @@ const ContactRequests = () => {
       color: 'bg-purple-500 hover:bg-purple-600',
       action: async (contact) => {
         try {
-          const response = await fetch(`${API_BASE_URL}/api/contact-requests/${contact._id}/convert-to-ticket`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            }
-          });
-          
-          const data = await response.json();
-          
-          if (data.success) {
-            alert(`✅ Ticket Created Successfully!\n\nTicket Number: ${data.ticketNumber}\nSubject: ${contact.subject}\nUser: ${contact.name}\n\nThe contact request has been converted to a support ticket.`);
+          const data = await api.postJson(`/api/contact-requests/${contact._id}/convert-to-ticket`, {});
+          if (data && data.success) {
+            toast.success(`Ticket #${data.ticketNumber} created for ${contact.name}`);
             // Refresh the contacts list to show the updated status
             fetchContacts();
           } else {
-            alert(`❌ Failed to create ticket: ${data.message || 'Unknown error'}`);
+            toast.error(`Failed to create ticket${data?.message ? ': ' + data.message : ''}`);
           }
         } catch (error) {
           console.error('Error creating ticket:', error);
-          alert(`❌ Error creating ticket: ${error.message}`);
+          toast.error(`Error creating ticket: ${error.message}`);
         }
       }
     }
@@ -102,13 +98,7 @@ const ContactRequests = () => {
     try {
       setLoading(true);
       setError('');
-      const response = await fetch(`${API_BASE_URL}/api/contact-requests`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
+  const data = await api.getJson(`/api/contact-requests`);
       
       // Handle both response formats (with success field or direct array)
       if (Array.isArray(data)) {
@@ -140,14 +130,8 @@ const ContactRequests = () => {
 
   const markAsRead = async (id) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/contact-requests/${id}/read`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
+  const response = await api.patchJson(`/api/contact-requests/${id}/read`, {});
+  if (response) {
         setContacts(contacts.map(contact => 
           contact._id === id ? { ...contact, read: true } : contact
         ));
@@ -158,17 +142,12 @@ const ContactRequests = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this contact request?')) {
+    const ok = await confirm({ title: 'Delete contact request?', message: 'This action cannot be undone.', confirmText: 'Delete' });
+    if (ok) {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/contact-requests/${id}`, {
-          method: 'DELETE',
-        });
-
-        if (response.ok) {
+        await api.del(`/api/contact-requests/${id}`);
           setContacts(contacts.filter(contact => contact._id !== id));
-        } else {
-          setError('Failed to delete contact request');
-        }
+          toast.success('Contact request deleted');
       } catch (error) {
         console.error('Error deleting contact:', error);
         setError('Failed to delete contact request');
@@ -181,19 +160,9 @@ const ContactRequests = () => {
 
     try {
       setReplying(true);
-      const response = await fetch(`${API_BASE_URL}/api/contacts/${selectedContact._id}/reply`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          replyMessage: replyMessage.trim(),
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        alert('Reply sent successfully!');
+      const data = await api.postJson(`/api/contacts/${selectedContact._id}/reply`, { replyMessage: replyMessage.trim() });
+      if (data) {
+        toast.success('Reply sent successfully!');
         setReplyMessage('');
         setShowModal(false);
         
@@ -204,8 +173,7 @@ const ContactRequests = () => {
             : contact
         ));
       } else {
-        const errorData = await response.json();
-        setError(errorData.error || 'Failed to send reply');
+        setError('Failed to send reply');
       }
     } catch (error) {
       console.error('Error sending reply:', error);
@@ -224,7 +192,8 @@ const ContactRequests = () => {
     const matchesStatus = statusFilter === 'all' || 
                          (statusFilter === 'unread' && !contact.read) ||
                          (statusFilter === 'read' && contact.read) ||
-                         (statusFilter === 'replied' && contact.replied);
+                         (statusFilter === 'replied' && contact.replied) ||
+                         (statusFilter === 'pending' && !contact.replied);
     
     return matchesSearch && matchesStatus;
   });
@@ -311,7 +280,13 @@ const ContactRequests = () => {
 
       {/* Modern Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-        <div className="bg-white/80 backdrop-blur-lg rounded-xl border border-white/20 shadow-lg p-6 relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+        <div
+          className={`bg-white/80 backdrop-blur-lg rounded-xl border border-white/20 shadow-lg p-6 relative overflow-hidden group hover:shadow-xl transition-all duration-300 cursor-pointer ${statusFilter==='all' ? 'ring-2 ring-blue-300' : ''}`}
+          onClick={() => { setStatusFilter('all'); setCurrentPage(1); }}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { setStatusFilter('all'); setCurrentPage(1); } }}
+        >
           <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <div className="relative z-10 text-center">
             <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-1">
@@ -322,7 +297,13 @@ const ContactRequests = () => {
           </div>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-lg rounded-xl border border-white/20 shadow-lg p-6 relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+        <div
+          className={`bg-white/80 backdrop-blur-lg rounded-xl border border-white/20 shadow-lg p-6 relative overflow-hidden group hover:shadow-xl transition-all duration-300 cursor-pointer ${statusFilter==='unread' ? 'ring-2 ring-blue-300' : ''}`}
+          onClick={() => { setStatusFilter('unread'); setCurrentPage(1); }}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { setStatusFilter('unread'); setCurrentPage(1); } }}
+        >
           <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-cyan-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <div className="relative z-10 text-center">
             <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-1">
@@ -333,7 +314,13 @@ const ContactRequests = () => {
           </div>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-lg rounded-xl border border-white/20 shadow-lg p-6 relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+        <div
+          className={`bg-white/80 backdrop-blur-lg rounded-xl border border-white/20 shadow-lg p-6 relative overflow-hidden group hover:shadow-xl transition-all duration-300 cursor-pointer ${statusFilter==='read' ? 'ring-2 ring-blue-300' : ''}`}
+          onClick={() => { setStatusFilter('read'); setCurrentPage(1); }}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { setStatusFilter('read'); setCurrentPage(1); } }}
+        >
           <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/50 to-green-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <div className="relative z-10 text-center">
             <div className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent mb-1">
@@ -344,7 +331,13 @@ const ContactRequests = () => {
           </div>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-lg rounded-xl border border-white/20 shadow-lg p-6 relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+        <div
+          className={`bg-white/80 backdrop-blur-lg rounded-xl border border-white/20 shadow-lg p-6 relative overflow-hidden group hover:shadow-xl transition-all duration-300 cursor-pointer ${statusFilter==='replied' ? 'ring-2 ring-blue-300' : ''}`}
+          onClick={() => { setStatusFilter('replied'); setCurrentPage(1); }}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { setStatusFilter('replied'); setCurrentPage(1); } }}
+        >
           <div className="absolute inset-0 bg-gradient-to-br from-purple-50/50 to-indigo-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <div className="relative z-10 text-center">
             <div className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mb-1">
@@ -355,7 +348,13 @@ const ContactRequests = () => {
           </div>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-lg rounded-xl border border-white/20 shadow-lg p-6 relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+        <div
+          className={`bg-white/80 backdrop-blur-lg rounded-xl border border-white/20 shadow-lg p-6 relative overflow-hidden group hover:shadow-xl transition-all duration-300 cursor-pointer ${statusFilter==='pending' ? 'ring-2 ring-blue-300' : ''}`}
+          onClick={() => { setStatusFilter('pending'); setCurrentPage(1); }}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { setStatusFilter('pending'); setCurrentPage(1); } }}
+        >
           <div className="absolute inset-0 bg-gradient-to-br from-yellow-50/50 to-orange-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <div className="relative z-10 text-center">
             <div className="text-3xl font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent mb-1">
@@ -409,6 +408,7 @@ const ContactRequests = () => {
               <option value="unread">Unread</option>
               <option value="read">Read</option>
               <option value="replied">Replied</option>
+              <option value="pending">Pending</option>
             </select>
           </div>
         </div>

@@ -8,12 +8,12 @@ import DarkModeToggle from './DarkModeToggle';
 import { FaBars, FaTimes } from 'react-icons/fa';
 
 const Navbar = () => {
-  const { isLoggedIn } = useUser();
+  const { isLoggedIn, user } = useUser();
   const { t, isRTL } = useLanguage();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const navigation = [
+  const baseNavigation = [
     { name: t('nav.home'), href: '/', key: 'home' },
     { name: t('nav.services'), href: '/services', key: 'services' },
     { name: t('nav.articles'), href: '/articles', key: 'articles' },
@@ -21,6 +21,12 @@ const Navbar = () => {
     { name: t('nav.faq'), href: '/faq', key: 'faq' },
     { name: t('nav.contact'), href: '/contact', key: 'contact' },
   ];
+
+  // Treat any userType containing 'research' as researcher (defensive for legacy values)
+  const isResearcher = isLoggedIn && (String(user?.userType || '').toLowerCase().includes('research'));
+  const navigation = isResearcher
+    ? [...baseNavigation.slice(0, 3), { name: t('nav.work'), href: '/work-with-us', key: 'work' }, ...baseNavigation.slice(3)]
+    : baseNavigation;
 
   const isActiveRoute = (href) => {
     if (href === '/') {

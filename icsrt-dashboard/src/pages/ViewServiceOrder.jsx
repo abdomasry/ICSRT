@@ -2,13 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaEdit, FaTrash, FaDownload, FaPhone, FaEnvelope, FaUser, FaCalendar, FaBook, FaGraduationCap, FaFileAlt, FaClock } from 'react-icons/fa';
 import { api } from '../lib/api';
+import { useToast } from '../context/ToastContext';
+import { useConfirm } from '../context/ConfirmContext';
 
 const ViewServiceOrder = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const toast = useToast();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const confirm = useConfirm();
 
   useEffect(() => {
     fetchServiceOrder();
@@ -33,18 +37,16 @@ const ViewServiceOrder = () => {
   };
 
   const handleDelete = async () => {
-    if (!window.confirm('Are you sure you want to delete this service order? This action cannot be undone.')) {
-      return;
-    }
+    const ok = await confirm({ title: 'Delete service order?', message: 'This action cannot be undone.', confirmText: 'Delete' });
+    if (!ok) return;
 
     try {
       await api.del(`/api/service-orders/${id}`);
-
-      alert('Service order deleted successfully');
+      toast.success('Service order deleted successfully');
       navigate('/service-orders');
     } catch (err) {
       console.error('Error deleting service order:', err);
-      alert('Failed to delete service order');
+      toast.error('Failed to delete service order');
     }
   };
 
@@ -54,10 +56,10 @@ const ViewServiceOrder = () => {
 
       // Update local state
       setOrder(prev => ({ ...prev, status: newStatus }));
-      alert(`Order status updated to ${newStatus}`);
+      toast.success(`Order status updated to ${newStatus}`);
     } catch (err) {
       console.error('Error updating status:', err);
-      alert('Failed to update status');
+      toast.error('Failed to update status');
     }
   };
 

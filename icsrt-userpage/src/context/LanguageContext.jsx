@@ -25,6 +25,8 @@ const translations = {
     'nav.profile': 'Profile',
     'nav.dashboard': 'Dashboard',
     'nav.logout': 'Logout',
+  // Researcher
+  'nav.work': 'Work With Us',
     
     // Homepage
     'hero.title.part1': 'International Center for',
@@ -471,6 +473,27 @@ const translations = {
     'serviceOrders.paymentLinkAvailable': 'Payment link available',
     'serviceOrders.readyForPayment': 'Ready for payment',
     'serviceOrders.payWithLink': 'Pay with Link'
+  ,
+  // Work With Us (Researcher)
+  'work.title': 'Work With Us',
+  'work.subtitle': 'Submit your idea or article overview and our team will get back to you.',
+  'work.onlyResearchers': 'This page is available for researcher/professional users.',
+  'work.why.title': 'Why work with ICSRT?',
+  'work.why.1.title': 'Expert Mentorship',
+  'work.why.1.desc': 'Collaborate with seasoned researchers and editors who guide your work to publication-ready quality.',
+  'work.why.2.title': 'Publishing Support',
+  'work.why.2.desc': 'From journal selection to revisions, we help you navigate the publication process.',
+  'work.why.3.title': 'Real Impact',
+  'work.why.3.desc': 'Join projects that solve real problems and contribute to the research community.',
+  'work.why.4.title': 'Recognition',
+  'work.why.4.desc': 'Your contributions are credited fairly with co-authorship or proper acknowledgment.',
+  'work.form.title.label': 'Title',
+  'work.form.title.placeholder': 'Your idea or article title',
+  'work.form.summary.label': 'Summary',
+  'work.form.summary.placeholder': 'Briefly describe your idea or article',
+  'work.form.submit': 'Submit',
+  'work.form.submitting': 'Submitting...',
+  'work.form.done': 'Submitted!'
   },
   ar: {
     // Navigation
@@ -485,6 +508,8 @@ const translations = {
     'nav.profile': 'الملف الشخصي',
     'nav.dashboard': 'لوحة التحكم',
     'nav.logout': 'تسجيل الخروج',
+  // Researcher
+  'nav.work': 'اعمل معنا',
     
     // Homepage
     'hero.title.part1': 'المركز الدولي للبحوث',
@@ -931,6 +956,27 @@ const translations = {
     'serviceOrders.paymentLinkAvailable': 'رابط الدفع متوفر',
     'serviceOrders.readyForPayment': 'جاهز للدفع',
     'serviceOrders.payWithLink': 'ادفع بالرابط'
+  ,
+  // Work With Us (Researcher)
+  'work.title': 'اعمل معنا',
+  'work.subtitle': 'أرسل فكرتك أو ملخص مقالتك وسيتواصل معك فريقنا.',
+  'work.onlyResearchers': 'هذه الصفحة متاحة لمستخدمي الباحثين/المهنيين فقط.',
+  'work.why.title': 'لماذا تعمل معنا؟',
+  'work.why.1.title': 'إرشاد خبراء',
+  'work.why.1.desc': 'تتعاون مع باحثين ومحررين ذوي خبرة يوجّهون عملك إلى جودة مناسبة للنشر.',
+  'work.why.2.title': 'دعم النشر',
+  'work.why.2.desc': 'من اختيار المجلة إلى المراجعات، نساعدك في اجتياز عملية النشر.',
+  'work.why.3.title': 'أثر حقيقي',
+  'work.why.3.desc': 'انضم إلى مشاريع تحل مشاكل واقعية وتساهم في المجتمع البحثي.',
+  'work.why.4.title': 'تقدير مستحق',
+  'work.why.4.desc': 'يتم توثيق مساهماتك بشكل عادل كمؤلف مشارك أو بإقرار مناسب.',
+  'work.form.title.label': 'العنوان',
+  'work.form.title.placeholder': 'عنوان الفكرة أو المقال',
+  'work.form.summary.label': 'الملخص',
+  'work.form.summary.placeholder': 'صف بإيجاز فكرتك أو مقالتك',
+  'work.form.submit': 'إرسال',
+  'work.form.submitting': 'جاري الإرسال...',
+  'work.form.done': 'تم الإرسال!'
   }
 };
 

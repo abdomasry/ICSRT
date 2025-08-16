@@ -3,12 +3,16 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import RefreshButton from '../components/RefreshButton';
 import { api } from '../lib/api';
+import { useToast } from '../context/ToastContext';
+import { useConfirm } from '../context/ConfirmContext';
 
 const Services = () => {
   const { hasPermission } = useAuth();
+  const toast = useToast();
   const [data, setData] = useState([]);
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(false);
+  const confirm = useConfirm();
 
   const parseFeatures = (features) => {
     if (!features) return [];
@@ -66,14 +70,15 @@ const Services = () => {
   }, []);
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this service?')) return;
+    const ok = await confirm({ title: 'Delete service?', message: 'This action cannot be undone.', confirmText: 'Delete' });
+    if (!ok) return;
     try {
       await api.del(`/api/services/${id}`);
       setData(data.filter(item => item._id !== id));
-      alert('Service deleted.');
+      toast.success('Service deleted.');
     } catch (err) {
       console.error(err);
-      alert('Error occurred while deleting.');
+      toast.error('Error occurred while deleting.');
     }
   };
 

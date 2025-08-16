@@ -1,6 +1,8 @@
 // Simple connectivity test for React frontend
+import { API_BASE_URL } from '../lib/api';
+
 export const testSocialLinksAPI = async () => {
-  const API_BASE_URL = 'http://localhost:3000';
+  // This utility is for local testing only. Uses the app's API_BASE_URL.
   
   console.log('🧪 Testing Social Links API connectivity from React...');
   
@@ -56,7 +58,7 @@ export const testSocialLinksAPI = async () => {
   } catch (error) {
     console.error('❌ Connectivity test failed:', error.message);
     if (error.message.includes('Failed to fetch')) {
-      console.error('🔗 Cannot connect to server. Make sure the backend server is running on http://localhost:3000');
+  console.error(`🔗 Cannot connect to server. Make sure the backend server is running on ${API_BASE_URL}`);
     }
     return false;
   }

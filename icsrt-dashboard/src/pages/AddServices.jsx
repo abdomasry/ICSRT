@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { apiUpload } from '../utils/api';
+import { api, API_BASE_URL } from '../lib/api';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '../context/ToastContext';
 
 const AddService = () => {
   const [form, setForm] = useState({ 
@@ -16,6 +18,7 @@ const AddService = () => {
   const navigate = useNavigate();
   const [uploading, setUploading] = useState(false);
   const [activeLangTab, setActiveLangTab] = useState('en');
+  const toast = useToast();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -26,21 +29,12 @@ const AddService = () => {
     e.preventDefault();
 
     try {
-      const res = await fetch('http://localhost:3000/api/services', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify(form)
-      });
-
-      if (res.ok) {
-        alert('Service added successfully!');
+      await api.post('/api/services', form);
+        toast.success('Service added successfully!');
         navigate('/services');
-      } else {
-        alert('Failed to add service.');
-      }
     } catch (err) {
       console.error(err);
-      alert('An error occurred while adding service.');
+      toast.error('An error occurred while adding service.');
     }
   };
 
@@ -49,11 +43,11 @@ const AddService = () => {
     if (!file) return;
     try {
       setUploading(true);
-      const result = await apiUpload('http://localhost:3000/api/upload', file);
+  const result = await apiUpload(`${API_BASE_URL}/api/upload`, file);
       setForm(prev => ({ ...prev, image: result.url }));
     } catch (err) {
       console.error('Upload error:', err);
-      alert('Image upload failed. Please try a smaller image (max 5MB).');
+      toast.error('Image upload failed. Please try a smaller image (max 5MB).');
     } finally {
       setUploading(false);
     }

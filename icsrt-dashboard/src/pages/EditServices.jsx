@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { apiUpload } from '../utils/api';
+import { api, API_BASE_URL } from '../lib/api';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useToast } from '../context/ToastContext';
 
 const EditService = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const toast = useToast();
   const [form, setForm] = useState({ 
   title: '', 
   titleAr: '',
@@ -20,8 +23,7 @@ const EditService = () => {
 
   useEffect(() => {
         console.log("🟡 Editing service with ID:", id);
-    fetch(`http://localhost:3000/api/services/${id}`)
-      .then(res => res.json())
+    api.get(`/api/services/${id}`)
       .then((srv) => setForm({
         title: srv.title || '',
         titleAr: srv.titleAr || '',
@@ -44,32 +46,22 @@ const EditService = () => {
     e.preventDefault();
 
     try {
-      const res = await fetch(`http://localhost:3000/api/services/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: form.title,
-          titleAr: form.titleAr,
-          description: form.description,
-          descriptionAr: form.descriptionAr,
-          image: form.image,
-          price: form.price,
-          duration: form.duration,
-          features: form.features
-        })
+      await api.put(`/api/services/${id}`, {
+        title: form.title,
+        titleAr: form.titleAr,
+        description: form.description,
+        descriptionAr: form.descriptionAr,
+        image: form.image,
+        price: form.price,
+        duration: form.duration,
+        features: form.features
       });
 
-      if (res.ok) {
-        alert('Service updated successfully!');
+        toast.success('Service updated successfully!');
         navigate('/services');
-      } else {
-        const errorText = await res.text();
-        console.error('Update failed:', errorText);
-        alert('Failed to update service.');
-      }
     } catch (err) {
       console.error(err);
-      alert('An error occurred while updating.');
+      toast.error('An error occurred while updating.');
     }
   };
 
@@ -78,11 +70,11 @@ const EditService = () => {
     if (!file) return;
     try {
       setUploading(true);
-      const result = await apiUpload('http://localhost:3000/api/upload', file);
+  const result = await apiUpload(`${API_BASE_URL}/api/upload`, file);
       setForm(prev => ({ ...prev, image: result.url }));
     } catch (err) {
       console.error('Upload error:', err);
-      alert('Image upload failed. Please try a smaller image (max 5MB).');
+      toast.error('Image upload failed. Please try a smaller image (max 5MB).');
     } finally {
       setUploading(false);
     }

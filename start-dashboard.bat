@@ -12,6 +12,8 @@ echo.
 echo Press Ctrl+C to stop the dashboard
 echo.
 
+rem Force React dev server to use port 3001 to avoid backend conflict
+set PORT=3001
 npm start
 
 pause

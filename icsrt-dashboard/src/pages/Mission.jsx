@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
+import { useToast } from '../context/ToastContext';
 
 const Mission = () => {
   const { hasPermission } = useAuth();
+  const toast = useToast();
   const [formData, setFormData] = useState({
     title: '',
     content: '',
@@ -75,7 +77,7 @@ const Mission = () => {
     
     // Check permission for edit
     if (!hasPermission('mission', 'edit')) {
-      alert('You don\'t have permission to edit mission.');
+      toast.error("You don't have permission to edit mission.");
       return;
     }
     
@@ -93,13 +95,13 @@ const Mission = () => {
       console.log('📡 Submitting mission data via API');
       const result = await doRequest();
       console.log('✅ Success result:', result);
-      if (!missionId) {
+  if (!missionId) {
         setMissionId(result?._id || result?.insertedId || result?.data?._id);
       }
-      alert('Mission section updated successfully!');
+  toast.success('Mission section updated successfully!');
     } catch (err) {
       console.error('💥 Exception during save:', err);
-      alert('Error occurred while saving.');
+  toast.error('Error occurred while saving.');
     } finally {
       setSaving(false);
       console.log('🏁 Save operation completed');

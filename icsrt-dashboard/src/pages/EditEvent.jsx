@@ -1,17 +1,30 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useToast } from '../context/ToastContext';
+import { api } from '../lib/api';
 
 const EditEvent = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const toast = useToast();
   const [form, setForm] = useState({ title: '', date: '', location: '', description: '' });
 
   useEffect(() => {
-    fetch(`http://localhost:3000/api/events/${id}`)
-      .then(res => res.json())
-      .then(setForm)
-      .catch(err => console.error('Fetch error:', err));
-  }, [id]);
+    (async () => {
+      try {
+        const data = await api.get(`/api/events/${id}`);
+        setForm({
+          title: data.title || '',
+          date: data.date ? data.date.substring(0,10) : '',
+          location: data.location || '',
+          description: data.description || ''
+        });
+      } catch (err) {
+        console.error('Fetch error:', err);
+        toast.error('Failed to load event');
+      }
+    })();
+  }, [id, toast]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -21,20 +34,12 @@ const EditEvent = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch(`http://localhost:3000/api/events/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
-      });
-      if (res.ok) {
-        alert('Event updated successfully!');
-        navigate('/events');
-      } else {
-        alert('Failed to update event.');
-      }
+      await api.put(`/api/events/${id}`, form);
+      toast.success('Event updated successfully!');
+      navigate('/events');
     } catch (err) {
       console.error(err);
-      alert('An error occurred while updating.');
+      toast.error('Failed to update event.');
     }
   };
 

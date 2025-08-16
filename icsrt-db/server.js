@@ -7,6 +7,9 @@ const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const bcrypt = require('bcryptjs');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const mongoSanitize = require('express-mongo-sanitize');
 const whatsappService = require('./whatsapp-service');
 const { addEnhancedServiceOrdersAPI } = require('./enhanced-service-orders-api-simple');
 const { addServiceOrderPurchaseAPI } = require('./service-order-purchase-api');
@@ -23,14 +26,18 @@ const BCRYPT_ROUNDS = parseInt(process.env.BCRYPT_ROUNDS || '10', 10);
 const JWT_SECRET = process.env.JWT_SECRET || 'icsrt-dashboard-secret-key-2024';
 const JWT_EXPIRES_IN = '7d';
 
-// Enhanced CORS configuration - Updated to support common localhost dev ports
-const allowedOrigins = [
-  'http://localhost:3000', // API itself (SSR or same-origin)
-  'http://localhost:3001', // Dashboard
-  'http://localhost:3002', // User page (preferred)
-  'http://localhost:3003', // Alt dev
-  'http://localhost:3004', // Alt dev
-  'http://localhost:5173'  // Vite dev default
+// Allowed origins: read from env (comma-separated), fallback to common localhost dev ports
+const envOrigins = (process.env.CORS_ORIGINS || process.env.ALLOWED_ORIGINS || '')
+  .split(',')
+  .map(s => s.trim())
+  .filter(Boolean);
+const allowedOrigins = envOrigins.length ? envOrigins : [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://localhost:3002',
+  'http://localhost:3003',
+  'http://localhost:3004',
+  'http://localhost:5173'
 ];
 const corsOptions = {
   origin: (origin, callback) => {
@@ -48,6 +55,11 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+app.use(helmet());
+app.use(mongoSanitize());
+// Global rate limit (adjust as needed)
+const globalLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 1000, standardHeaders: true, legacyHeaders: false });
+app.use(globalLimiter);
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
@@ -63,20 +75,31 @@ if (!fs.existsSync(UPLOADS_DIR)) {
 }
 app.use('/uploads', express.static(UPLOADS_DIR));
 
-// Security headers
-app.use((req, res, next) => {
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('X-XSS-Protection', '1; mode=block');
-  next();
-});
+// helmet above already sets standard security headers
 
-// Request logging middleware
+// Request logging middleware (dev only unless LOG_REQUESTS=1)
 app.use((req, res, next) => {
-  const timestamp = new Date().toISOString();
-  console.log(`[${timestamp}] ${req.method} ${req.path} - ${req.ip}`);
+  if (process.env.LOG_REQUESTS === '1' || process.env.NODE_ENV !== 'production') {
+    const timestamp = new Date().toISOString();
+    console.log(`[${timestamp}] ${req.method} ${req.path} - ${req.ip}`);
+  }
   next();
 });
+// Basic admin guard: require ADMIN_API_TOKEN for write ops in production
+const requireAdmin = (req, res, next) => {
+  if (process.env.NODE_ENV !== 'production') return next();
+  const adminToken = process.env.ADMIN_API_TOKEN || '';
+  const hdr = req.headers.authorization || '';
+  const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : hdr;
+  if (!adminToken || token !== adminToken) {
+    return res.status(401).json({ error: 'Unauthorized', code: 'ADMIN_AUTH_REQUIRED' });
+  }
+  next();
+};
+
+// Tighter limits for auth endpoints
+const authLimiter = rateLimit({ windowMs: 60 * 1000, max: 20, standardHeaders: true, legacyHeaders: false });
+app.use('/api/auth/', authLimiter);
 
 // Consistent MongoDB configuration (allow override via ENV)
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://icsrt:admin@icsrt.3iuzx9u.mongodb.net/?retryWrites=true&w=majority";
@@ -213,6 +236,7 @@ const generateVerificationToken = () => {
 const sendVerificationEmail = async (email, fullName, verificationCode, verificationToken) => {
   try {
     const transporter = createEmailTransporter();
+    const FRONTEND_BASE = process.env.FRONTEND_URL || 'http://localhost:3002';
     
     // If transporter is null, use development mode
     if (!transporter) {
@@ -222,7 +246,7 @@ const sendVerificationEmail = async (email, fullName, verificationCode, verifica
       console.log(`👤 Name: ${fullName}`);
       console.log(`🔐 Verification Code: ${verificationCode}`);
       console.log(`🔗 Verification Token: ${verificationToken}`);
-      console.log(`🌐 Verification Link: http://localhost:3002/verify-email?token=${verificationToken}`);
+  console.log(`🌐 Verification Link: ${FRONTEND_BASE}/verify-email?token=${verificationToken}`);
       console.log('═══════════════════════════════════════════════');
       console.log('ℹ️  Use the verification code above to verify the account');
       console.log('ℹ️  Or click the verification link above\n');
@@ -259,7 +283,7 @@ const sendVerificationEmail = async (email, fullName, verificationCode, verifica
             <div style="background: white; border-radius: 8px; padding: 20px; margin: 20px 0;">
               <h3 style="color: #374151; margin-top: 0;">Method 2: Direct Link</h3>
               <p>Or click this link to verify automatically:</p>
-              <a href="http://localhost:3002/verify-email?token=${verificationToken}" 
+              <a href="${FRONTEND_BASE}/verify-email?token=${verificationToken}" 
                  style="display: inline-block; background: #2563eb; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">
                 Verify Email Address
               </a>
@@ -305,8 +329,8 @@ const sendVerificationEmail = async (email, fullName, verificationCode, verifica
 const sendPasswordResetEmail = async (email, fullName, resetToken) => {
   try {
     const transporter = createEmailTransporter();
-
-    const resetLink = `http://localhost:3002/reset-password?token=${resetToken}`;
+    const FRONTEND_BASE = process.env.FRONTEND_URL || 'http://localhost:3002';
+    const resetLink = `${FRONTEND_BASE}/reset-password?token=${resetToken}`;
 
     // Development mode when transporter isn't configured
     if (!transporter) {
@@ -500,13 +524,26 @@ app.get('/api/dashboard-stats', async (req, res) => {
 
     const ordersCur = await countInRange('service-orders', ['submittedAt', 'createdAt'], startOfMonth, startOfNextMonth);
     const ordersPrev = await countInRange('service-orders', ['submittedAt', 'createdAt'], startOfPrevMonth, startOfMonth);
-    const serviceOrdersChangePercent = ordersPrev > 0 ? ((ordersCur - ordersPrev) / ordersPrev) * 100 : (ordersCur > 0 ? 100 : 0);
+  const serviceOrdersChangePercent = ordersPrev > 0 ? ((ordersCur - ordersPrev) / ordersPrev) * 100 : (ordersCur > 0 ? 100 : 0);
+
+  // Collaborations counts
+  const totalCollaborations = await database.collection('collaborations').countDocuments();
+  const collaborationsSubmitted = await database.collection('collaborations').countDocuments({ status: 'submitted' });
+  const collaborationsReview = await database.collection('collaborations').countDocuments({ status: 'review' });
+  const collaborationsApproved = await database.collection('collaborations').countDocuments({ status: 'approved' });
+  const collaborationsRejected = await database.collection('collaborations').countDocuments({ status: 'rejected' });
 
     const stats = {
       // Main Stats
       totalUsers: await database.collection('users').countDocuments(),
       totalTickets: await database.collection('tickets').countDocuments(),
-      totalServiceOrders: await database.collection('service-orders').countDocuments(),
+  totalServiceOrders: await database.collection('service-orders').countDocuments(),
+  // Collaborations
+  totalCollaborations,
+  collaborationsSubmitted,
+  collaborationsReview,
+  collaborationsApproved,
+  collaborationsRejected,
       monthlyRevenue,
       monthlyRevenueCurrency: 'EGP',
       monthlyRevenueChangePercent: Number(monthlyRevenueChangePercent.toFixed(2)),
@@ -664,6 +701,9 @@ app.post('/api/auth/login', async (req, res) => {
         fullName: user.fullName,
         email: user.email,
         phone: user.phone,
+  institution: user.institution,
+  country: user.country,
+  userType: user.userType || 'user',
         role: user.role || 'user',
         isVerified: user.isVerified,
         status: user.status
@@ -693,8 +733,12 @@ app.post('/api/auth/signup', async (req, res) => {
       lastName,
       email, 
       password, 
-      phone, 
-      // Ignore registration-specific fields
+  phone, 
+  // Persist these too (were previously ignored)
+  institution,
+  country,
+  userType,
+  // Ignore other registration-specific fields
       ...otherFields 
     } = req.body;
 
@@ -723,7 +767,17 @@ app.post('/api/auth/signup', async (req, res) => {
     const verificationToken = generateVerificationToken();
     const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-    // Create user object (excluding registration-specific fields)
+    // Normalize userType to combined categories (reuse logic from /register)
+    const normalizeUserType = (ut) => {
+      if (!ut) return 'user';
+      const s = String(ut).toLowerCase().trim();
+      if (s === 'student_academic' || s === 'researcher_professional') return s;
+      if (s.includes('student') || s.includes('academic')) return 'student_academic';
+      if (s.includes('researcher') || s.includes('professional')) return 'researcher_professional';
+      return s;
+    };
+
+    // Create user object (now includes institution, country, userType)
     const newUser = {
       fullName: computedFullName,
       firstName: firstName || null,
@@ -731,6 +785,9 @@ app.post('/api/auth/signup', async (req, res) => {
       email: email.toLowerCase(),
       password: await hashPassword(password),
       phone: normalizePhoneInput(phone),
+      institution: institution || null,
+      country: country || null,
+      userType: normalizeUserType(userType),
       isVerified: false,
       verificationCode,
       verificationToken,
@@ -983,7 +1040,7 @@ app.post('/api/auth/register', async (req, res) => {
       phone, 
       institution,
       country,
-      userType,
+  userType,
       // Ignore other fields
       ...otherFields 
     } = req.body;
@@ -1035,6 +1092,16 @@ app.post('/api/auth/register', async (req, res) => {
     const verificationToken = generateVerificationToken();
     const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
+    // Normalize userType to combined categories
+    const normalizeUserType = (ut) => {
+      if (!ut) return 'user';
+      const s = String(ut).toLowerCase().trim();
+      if (s === 'student_academic' || s === 'researcher_professional') return s;
+      if (s.includes('student') || s.includes('academic')) return 'student_academic';
+      if (s.includes('researcher') || s.includes('professional')) return 'researcher_professional';
+      return s; // fallback to whatever was provided
+    };
+
     // Create user object
     const userData = {
       fullName: computedFullName.trim(),
@@ -1045,7 +1112,7 @@ app.post('/api/auth/register', async (req, res) => {
       phone: normalizePhoneInput(phone),
       institution: institution || null,
       country: country || null,
-      userType: userType || 'user',
+      userType: normalizeUserType(userType),
       role: 'user',
       status: 'active',
       isVerified: false,
@@ -1270,7 +1337,7 @@ app.post('/api/auth/reset-password', async (req, res) => {
 app.get('/api/users', async (req, res) => {
   try {
     const database = await connectDB();
-    const { page = 1, limit = 50, search, sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
+    const { page = 1, limit = 50, search, sortBy = 'createdAt', sortOrder = 'desc', userType: userTypeParam } = req.query;
     
     let query = {};
     if (search) {
@@ -1281,6 +1348,14 @@ app.get('/api/users', async (req, res) => {
           { phone: { $regex: search, $options: 'i' } }
         ]
       };
+    }
+    // Optional filter by userType (supports aliases)
+    if (userTypeParam && String(userTypeParam).toLowerCase() !== 'all') {
+      const s = String(userTypeParam).toLowerCase().trim();
+      let canonical = s;
+      if (s === 'student' || s === 'academic' || s === 'student_academic') canonical = 'student_academic';
+      else if (s === 'researcher' || s === 'professional' || s === 'researcher_professional') canonical = 'researcher_professional';
+      query.userType = canonical;
     }
     
     const options = {
@@ -1300,6 +1375,9 @@ app.get('/api/users', async (req, res) => {
       fullName: user.fullName,
       email: user.email,
       phone: user.phone,
+      institution: user.institution,
+      country: user.country,
+      userType: user.userType,
       role: user.role,
       status: user.status,
       isVerified: user.isVerified,
@@ -1327,6 +1405,20 @@ app.get('/api/users', async (req, res) => {
   }
 });
 
+// Users quick stats (counts by userType)
+app.get('/api/users/stats', async (req, res) => {
+  try {
+    const database = await connectDB();
+    const total = await database.collection('users').countDocuments({});
+    const researchers = await database.collection('users').countDocuments({ userType: 'researcher_professional' });
+    const students = await database.collection('users').countDocuments({ userType: 'student_academic' });
+    res.json({ total, researchers, students });
+  } catch (error) {
+    console.error('❌ Get users stats error:', error);
+    res.status(500).json({ error: 'Failed to fetch users stats', code: 'USERS_STATS_ERROR' });
+  }
+});
+
 // Get single user by ID (for dashboard)
 app.get('/api/users/:id', async (req, res) => {
   try {
@@ -1348,6 +1440,9 @@ app.get('/api/users/:id', async (req, res) => {
       fullName: user.fullName,
       email: user.email,
       phone: user.phone,
+      institution: user.institution,
+      country: user.country,
+      userType: user.userType,
       role: user.role,
       status: user.status,
       isVerified: user.isVerified,
@@ -1371,7 +1466,7 @@ app.get('/api/users/:id', async (req, res) => {
 app.put('/api/users/:id', async (req, res) => {
   try {
     const database = await connectDB();
-    const { fullName, email, phone, role, status } = req.body;
+    const { fullName, email, phone, role, status, institution, country, userType } = req.body;
     
     const updateData = {
       updatedAt: new Date().toISOString(),
@@ -1384,6 +1479,19 @@ app.put('/api/users/:id', async (req, res) => {
     if (phone !== undefined) updateData.phone = phone;
     if (role !== undefined) updateData.role = role;
     if (status !== undefined) updateData.status = status;
+    if (institution !== undefined) updateData.institution = institution;
+    if (country !== undefined) updateData.country = country;
+    if (userType !== undefined) {
+      const normalizeUserType = (ut) => {
+        if (!ut) return 'user';
+        const s = String(ut).toLowerCase().trim();
+        if (s === 'student_academic' || s === 'researcher_professional') return s;
+        if (s.includes('student') || s.includes('academic')) return 'student_academic';
+        if (s.includes('researcher') || s.includes('professional')) return 'researcher_professional';
+        return s;
+      };
+      updateData.userType = normalizeUserType(userType);
+    }
     
     const result = await database.collection('users').updateOne(
       { _id: parseId(req.params.id) },
@@ -1396,10 +1504,33 @@ app.put('/api/users/:id', async (req, res) => {
         code: 'NOT_FOUND'
       });
     }
-    
+
+    // Fetch and return sanitized updated user
+    const updated = await database.collection('users').findOne({ _id: parseId(req.params.id) });
+    if (!updated) {
+      return res.json({ success: true, message: 'User updated successfully' });
+    }
+    const sanitizedUser = {
+      _id: updated._id,
+      fullName: updated.fullName,
+      email: updated.email,
+      phone: updated.phone,
+      institution: updated.institution,
+      country: updated.country,
+      userType: updated.userType,
+      role: updated.role,
+      status: updated.status,
+      isVerified: updated.isVerified,
+      createdAt: updated.createdAt,
+      updatedAt: updated.updatedAt,
+      lastLoginAt: updated.lastLoginAt,
+      verifiedAt: updated.verifiedAt
+    };
+
     res.json({ 
       success: true,
-      message: 'User updated successfully'
+      message: 'User updated successfully',
+      user: sanitizedUser
     });
   } catch (error) {
     console.error('❌ Update user error:', error);
@@ -1742,7 +1873,9 @@ app.put('/api/admin/service-orders/:id/price', async (req, res) => {
 const collections = [
   'services', 'service-orders', 'contact-requests', 'conferences', 'speakers', 'papers', 'journals',
   'contacts', 'about', 'mission', 'vision', 'events', 'news', 
-  'testimonials', 'faq', 'gallery', 'home', 'admins', /* users removed (custom endpoints handle users) */ 'roles', 'social-links'
+  'testimonials', 'faq', 'gallery', 'home', 'admins', /* users removed (custom endpoints handle users) */ 'roles', 'social-links',
+  // New collection for researcher collaboration proposals (Work With Us submissions)
+  'collaborations'
 ];
 
 function generateRoutes(collectionName) {
@@ -1764,6 +1897,15 @@ function generateRoutes(collectionName) {
             { content: { $regex: search, $options: 'i' } }
           ]
         };
+      }
+      // Special filters for collaborations: allow filtering by userEmail or userId and status
+      if (collectionName === 'collaborations') {
+        const { userEmail, userId, status } = req.query;
+        if (userEmail) query.userEmail = String(userEmail).toLowerCase();
+        if (userId) query.userId = userId; // stored as string
+        if (status && String(status).toLowerCase() !== 'all') {
+          query.status = String(status).toLowerCase();
+        }
       }
       
       const options = {
@@ -1829,7 +1971,7 @@ function generateRoutes(collectionName) {
   });
 
   // POST new item
-  app.post(`/api/${collectionName}`, async (req, res) => {
+  app.post(`/api/${collectionName}`, requireAdmin, async (req, res) => {
     try {
       const database = await connectDB();
       const body = { ...req.body };
@@ -1895,7 +2037,7 @@ function generateRoutes(collectionName) {
   });
 
   // PUT update item
-  app.put(`/api/${collectionName}/:id`, async (req, res) => {
+  app.put(`/api/${collectionName}/:id`, requireAdmin, async (req, res) => {
     try {
       const database = await connectDB();
       const body = { ...req.body };
@@ -1934,7 +2076,7 @@ function generateRoutes(collectionName) {
   });
 
   // DELETE item
-  app.delete(`/api/${collectionName}/:id`, async (req, res) => {
+  app.delete(`/api/${collectionName}/:id`, requireAdmin, async (req, res) => {
     try {
       const database = await connectDB();
       const result = await database.collection(collectionName).deleteOne({ 
@@ -1983,11 +2125,20 @@ try {
   });
   const upload = multer({
     storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+    limits: { fileSize: 20 * 1024 * 1024 }, // 20MB
     fileFilter: (req, file, cb) => {
-      const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      const allowed = [
+        // images
+        'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+        // documents
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-powerpoint',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+      ];
       if (allowed.includes(file.mimetype)) cb(null, true);
-      else cb(new Error('Only image files are allowed'));
+      else cb(new Error('Only image or document files (pdf, doc, docx, ppt, pptx) are allowed'));
     }
   });
 
@@ -3867,25 +4018,6 @@ app.post('/api/contact-requests/:id/convert-to-ticket', async (req, res) => {
 
 // === ERROR HANDLING MIDDLEWARE ===
 
-// Handle 404
-app.use('*', (req, res) => {
-  res.status(404).json({
-    error: 'Endpoint not found',
-    code: 'NOT_FOUND',
-    path: req.originalUrl
-  });
-});
-
-// Global error handler
-app.use((error, req, res, next) => {
-  console.error('❌ Global error:', error);
-  res.status(500).json({
-    error: 'Internal server error',
-    code: 'INTERNAL_ERROR',
-    message: error.message
-  });
-});
-
 // === SERVER STARTUP ===
 
 // Graceful shutdown
@@ -4846,3 +4978,22 @@ app.delete('/api/contacts/:id', async (req, res) => {
 });
 
 startServer();
+
+// Handle 404 (must be after all routes)
+app.use('*', (req, res) => {
+  res.status(404).json({
+    error: 'Endpoint not found',
+    code: 'NOT_FOUND',
+    path: req.originalUrl
+  });
+});
+
+// Global error handler (last middleware)
+app.use((error, req, res, next) => {
+  console.error('❌ Global error:', error);
+  res.status(500).json({
+    error: 'Internal server error',
+    code: 'INTERNAL_ERROR',
+    message: error.message
+  });
+});

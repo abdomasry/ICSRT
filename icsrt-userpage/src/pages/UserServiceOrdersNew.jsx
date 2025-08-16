@@ -132,7 +132,8 @@ const UserServiceOrders = () => {
         paymentMethod: 'paymob',
         billingInfo,
         couponCode: appliedCoupon?.code,
-        currency: 'USD',
+        // Paymob requires EGP for card/wallet payments
+        currency: 'EGP',
       });
       
       if (data.success) {
@@ -142,8 +143,9 @@ const UserServiceOrders = () => {
   // Close modal and show success
   setShowModal(false);
         if (data.paymentUrl) {
-          // Open Paymob iframe in a new tab/window
-          window.open(data.paymentUrl, '_blank');
+          // Redirect in the same tab to avoid popup blockers
+          window.location.href = data.paymentUrl;
+          return;
         }
         alert(`Purchase initiated successfully! Payment ID: ${data.paymentId}\n\nAmount: $${data.paymentData.amount}`);
       } else {
@@ -518,8 +520,8 @@ const UserServiceOrders = () => {
         </div>
       </div>
 
-      {/* CSS Animations */}
-      <style jsx>{`
+  {/* CSS Animations */}
+  <style>{`
         @keyframes fadeInUp {
           from {
             opacity: 0;
@@ -536,7 +538,7 @@ const UserServiceOrders = () => {
           -webkit-box-orient: vertical;
           overflow: hidden;
         }
-      `}</style>
+  `}</style>
 
       {/* Modern Order Details Modal */}
       {showModal && selectedOrder && (
