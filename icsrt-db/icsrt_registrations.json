@@ -1,0 +1,22 @@
+[
+  {
+    "fullName": "Sara Mahmoud",
+    "email": "sara@example.com",
+    "phone": "+201234567890",
+    "institution": "Ain Shams University",
+    "country": "Egypt",
+    "conference": "International Conference on Sustainable Research & Technology",
+    "paymentStatus": "paid",
+    "registeredAt": "2025-06-01T10:15:00Z"
+  },
+  {
+    "fullName": "Omar Khaled",
+    "email": "omar.khaled@example.com",
+    "phone": "+966500123456",
+    "institution": "King Saud University",
+    "country": "Saudi Arabia",
+    "conference": "Middle East Conference on Artificial Intelligence",
+    "paymentStatus": "pending",
+    "registeredAt": "2025-06-02T08:30:00Z"
+  }
+]

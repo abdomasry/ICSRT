@@ -1,0 +1,110 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Dark mode configuration */
+@layer base {
+  /* Light mode colors (default) */
+  :root {
+    --color-bg-primary: #ffffff;
+    --color-bg-secondary: #f8fafc;
+    --color-text-primary: #1e293b;
+    --color-text-secondary: #64748b;
+    --color-border: #e2e8f0;
+  }
+
+  /* Dark mode colors */
+  .dark {
+    --color-bg-primary: #0f172a;
+    --color-bg-secondary: #1e293b;
+    --color-text-primary: #f1f5f9;
+    --color-text-secondary: #cbd5e1;
+    --color-border: #334155;
+  }
+
+  /* Apply dark mode to body */
+  .dark body {
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-primary);
+  }
+}
+
+/* Dark mode utilities */
+@layer utilities {
+  .bg-primary {
+    background-color: var(--color-bg-primary);
+  }
+  
+  .bg-secondary {
+    background-color: var(--color-bg-secondary);
+  }
+  
+  .text-primary {
+    color: var(--color-text-primary);
+  }
+  
+  .text-secondary {
+    color: var(--color-text-secondary);
+  }
+  
+  .border-custom {
+    border-color: var(--color-border);
+  }
+}
+
+/* RTL Support */
+[dir="rtl"] {
+  direction: rtl;
+}
+
+[dir="ltr"] {
+  direction: ltr;
+}
+
+/* Custom RTL styles */
+[dir="rtl"] .space-x-reverse > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-x-reverse: 1;
+}
+
+/* Arabic font support */
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@200;300;400;500;700;800;900&display=swap');
+
+[dir="rtl"] * {
+  font-family: 'Tajawal', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* RTL animations and transitions */
+[dir="rtl"] .group-hover\:translate-x-1 {
+  transform: translateX(-0.25rem);
+}
+
+[dir="rtl"] .hover\:translate-x-1:hover {
+  transform: translateX(-0.25rem);
+}
+
+/* RTL text alignment */
+[dir="rtl"] .text-left {
+  text-align: right;
+}
+
+[dir="rtl"] .text-right {
+  text-align: left;
+}
+
+/* Custom scrollbar for RTL */
+[dir="rtl"] ::-webkit-scrollbar {
+  width: 8px;
+}
+
+[dir="rtl"] ::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+[dir="rtl"] ::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+[dir="rtl"] ::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}

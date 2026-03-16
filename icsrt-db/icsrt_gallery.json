@@ -1,0 +1,17 @@
+[
+  {
+    "title": "Opening Ceremony",
+    "imageUrl": "https://icsrt-me.com/images/gallery/opening.jpg",
+    "caption": "Dr. Ahmed opening the first session."
+  },
+  {
+    "title": "Keynote Speech",
+    "imageUrl": "https://icsrt-me.com/images/gallery/keynote.jpg",
+    "caption": "Prof. Smith delivering a keynote speech on AI."
+  },
+  {
+    "title": "Award Ceremony",
+    "imageUrl": "https://icsrt-me.com/images/gallery/award.jpg",
+    "caption": "Award presentation to the best paper winner."
+  }
+]

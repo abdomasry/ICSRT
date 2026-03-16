@@ -1,0 +1,9 @@
+@echo off
+echo Restarting server with enhanced API fix...
+echo.
+echo Stopping any existing server processes...
+taskkill /f /im node.exe 2>nul
+
+echo.
+echo Starting server with debug logging...
+node server.js

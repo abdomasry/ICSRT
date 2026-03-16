@@ -1,0 +1,16 @@
+[
+  {
+    "title": "AI in Education Conference",
+    "date": "2025-10-15",
+    "location": "Riyadh, Saudi Arabia",
+    "description": "A regional conference on the role of artificial intelligence in reshaping modern education systems.",
+    "image": "ai-education.jpg"
+  },
+  {
+    "title": "Sustainable Tech Expo",
+    "date": "2025-11-20",
+    "location": "Dubai, UAE",
+    "description": "Showcasing the latest in sustainable technologies and green innovation.",
+    "image": "sustainable-tech.jpg"
+  }
+]

@@ -1,0 +1,70 @@
+{
+  "social_links": [
+    {
+      "_id": "social_1",
+      "platform": "Facebook",
+      "url": "https://facebook.com/icsrt",
+      "icon": "fab fa-facebook",
+      "label": "Facebook",
+      "enabled": true,
+      "order": 1,
+      "createdAt": "2025-07-25T09:02:08.065Z",
+      "updatedAt": "2025-07-25T09:02:08.066Z"
+    },
+    {
+      "_id": "social_2",
+      "platform": "Twitter",
+      "url": "https://twitter.com/icsrt",
+      "icon": "fab fa-twitter",
+      "label": "Twitter",
+      "enabled": true,
+      "order": 2,
+      "createdAt": "2025-07-25T09:02:08.066Z",
+      "updatedAt": "2025-07-25T09:02:08.066Z"
+    },
+    {
+      "_id": "social_3",
+      "platform": "LinkedIn",
+      "url": "https://linkedin.com/company/icsrt",
+      "icon": "fab fa-linkedin",
+      "label": "LinkedIn",
+      "enabled": true,
+      "order": 3,
+      "createdAt": "2025-07-25T09:02:08.066Z",
+      "updatedAt": "2025-07-25T09:02:08.066Z"
+    },
+    {
+      "_id": "social_4",
+      "platform": "Instagram",
+      "url": "https://instagram.com/icsrt",
+      "icon": "fab fa-instagram",
+      "label": "Instagram",
+      "enabled": true,
+      "order": 4,
+      "createdAt": "2025-07-25T09:02:08.066Z",
+      "updatedAt": "2025-07-25T09:02:08.066Z"
+    },
+    {
+      "_id": "social_1753435496724_00c5t7d1z",
+      "platform": "youtube",
+      "url": "https://play.google.com/store/apps/developer?id=Saima+Individuo&hl=en",
+      "icon": "fab fa-youtube",
+      "label": "Youtube",
+      "enabled": true,
+      "order": 5,
+      "createdAt": "2025-07-25T09:24:56.724Z",
+      "updatedAt": "2025-07-25T09:24:56.725Z"
+    },
+    {
+      "_id": "social_1754192062645_64qcxprdv",
+      "platform": "github",
+      "url": "https://github.com/icsrt",
+      "icon": "fab fa-github",
+      "label": "GitHub",
+      "enabled": true,
+      "order": 6,
+      "createdAt": "2025-08-03T03:34:22.645Z",
+      "updatedAt": "2025-08-03T03:34:22.646Z"
+    }
+  ]
+}

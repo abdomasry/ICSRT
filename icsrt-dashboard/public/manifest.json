@@ -1,0 +1,16 @@
+{
+  "short_name": "لوحة التحكم",
+  "name": "المكتب الدولي للأبحاث العلمية والترجمة - لوحة التحكم",
+  "icons": [
+    {
+      "src": "452930000_504440245289808_1123679767226543729_n.jpg",
+      "sizes": "500x500",
+      "type": "image/jpeg"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#1e40af",
+  "background_color": "#f9fafb",
+  "description": "لوحة تحكم المكتب الدولي للأبحاث العلمية والترجمة"
+}
