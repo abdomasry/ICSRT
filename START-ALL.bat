@@ -1,7 +1,7 @@
 @echo off
 title ICSRT Project Launcher
 echo ===================================================
-echo              Starting ICSRT System
+echo              Starting ICSRT System (Next.js)
 echo ===================================================
 echo.
 
@@ -12,17 +12,17 @@ start "ICSRT Backend API" cmd /k "cd /d "%ROOT_DIR%icsrt-db" && npm start"
 
 timeout /t 3 /nobreak >nul
 
-echo 2. Starting Admin Dashboard (Port 3001)...
-start "ICSRT Admin Dashboard" cmd /k "cd /d "%ROOT_DIR%icsrt-dashboard" && npm start"
+echo 2. Starting Admin Dashboard Next.js (Port 3001)...
+start "ICSRT Admin Dashboard" cmd /k "cd /d "%ROOT_DIR%icsrt-dashboard" && npm run dev"
 
 timeout /t 3 /nobreak >nul
 
-echo 3. Starting User Portal (Port 3002)...
-start "ICSRT User Portal" cmd /k "cd /d "%ROOT_DIR%icsrt-userpage" && set PORT=3002 && npm start"
+echo 3. Starting User Portal Next.js (Port 3002)...
+start "ICSRT User Portal" cmd /k "cd /d "%ROOT_DIR%icsrt-userpage" && npm run dev"
 
 echo.
 echo ===================================================
-echo All ICSRT services are starting!
+echo All ICSRT Next.js services are starting!
 echo.
 echo Access URLs:
 echo - Backend API:     http://localhost:3000

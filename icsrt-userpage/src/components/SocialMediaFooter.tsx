@@ -1,3 +1,4 @@
+'use client';
 import React, { useState, useEffect } from 'react';
 import { api } from '../lib/api';
 import { 
@@ -19,7 +20,7 @@ import {
 } from 'react-icons/fa';
 
 const SocialMediaFooter = ({ className = "" }) => {
-  const [socialLinks, setSocialLinks] = useState([]);
+  const [socialLinks, setSocialLinks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 

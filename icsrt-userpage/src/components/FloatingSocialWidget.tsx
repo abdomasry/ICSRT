@@ -1,3 +1,4 @@
+'use client';
 import React, { useState, useEffect } from 'react';
 import { api } from '../lib/api';
 import { 
@@ -20,7 +21,7 @@ import {
 } from 'react-icons/fa';
 
 const FloatingSocialWidget = ({ className = "" }) => {
-  const [socialLinks, setSocialLinks] = useState([]);
+  const [socialLinks, setSocialLinks] = useState<any[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 

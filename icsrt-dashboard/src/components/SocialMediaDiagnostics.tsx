@@ -1,8 +1,9 @@
+'use client';
 import React, { useState } from 'react';
 import { API_BASE_URL } from '../lib/api';
 
 const SocialMediaDiagnostics = () => {
-  const [diagnosticResults, setDiagnosticResults] = useState([]);
+  const [diagnosticResults, setDiagnosticResults] = useState<any[]>([]);
   const [isRunning, setIsRunning] = useState(false);
 
   // Uses environment API base URL

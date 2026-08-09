@@ -1,8 +1,9 @@
+'use client';
 import React, { useState, useEffect } from 'react';
 import { api } from '../lib/api';
 
 const SocialFooter = () => {
-  const [socialLinks, setSocialLinks] = useState([]);
+  const [socialLinks, setSocialLinks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Platform icon mapping using Unicode emojis (no dependency on Font Awesome)
@@ -25,7 +26,7 @@ const SocialFooter = () => {
       console.log('🔄 Fetching social media links for footer...');
 
       // Prefer the enabled-only endpoint; fall back to full list if not available
-      let links = [];
+      let links: any[] = [];
       try {
         links = await api.get('/api/social-links/enabled');
       } catch (err) {

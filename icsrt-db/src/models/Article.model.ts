@@ -18,9 +18,13 @@ export class ArticleModel {
     const objectId = parseObjectId(id);
     const collection = await this.getCollection();
     if (objectId) {
-      return (await collection.findOne({ _id: objectId })) as IArticle | null;
+      const found = await collection.findOne({ _id: objectId });
+      if (found) return found as IArticle;
     }
-    return (await collection.findOne({ id: id.toString() })) as IArticle | null;
+    const strId = String(id || '');
+    return (await collection.findOne({
+      $or: [{ id: strId }, { slug: strId }, { _id: strId as any }]
+    })) as IArticle | null;
   }
 
   static async create(articleData: Partial<IArticle>): Promise<IArticle> {

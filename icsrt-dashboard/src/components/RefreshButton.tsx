@@ -1,3 +1,4 @@
+'use client';
 import React from 'react';
 
 const RefreshButton = ({ onRefresh, loading = false, disabled = false, className = '' }) => {

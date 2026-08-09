@@ -1,3 +1,4 @@
+'use client';
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { api } from '../lib/api';
@@ -27,7 +28,7 @@ const Footer = () => {
     } catch {}
     return fallback ?? key;
   };
-  const [socialLinks, setSocialLinks] = useState([]);
+  const [socialLinks, setSocialLinks] = useState<any[]>([]);
 
   // (Removed dev-only quick setup function)
 
@@ -76,7 +77,7 @@ const Footer = () => {
     try {
       console.log('🔄 Footer: Fetching enabled social links via /api/social-links/enabled...');
       let data;
-      let links = [];
+      let links: any[] = [];
 
       try {
         data = await api.get('/api/social-links/enabled');

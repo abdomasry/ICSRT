@@ -1,3 +1,4 @@
+'use client';
 import React from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { countryCodes } from '../utils/countryData';

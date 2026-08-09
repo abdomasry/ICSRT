@@ -1,3 +1,4 @@
+'use client';
 import React from 'react';
 
 // Reusable pagination component
@@ -26,8 +27,8 @@ export default function Pagination({
   const sizes = [10, 20, 50, 100];
 
   // Build compact page number range (1 ... x-1 x x+1 ... total)
-  const pages = [];
-  const add = (p) => { if (p >= 1 && p <= totalPages && !pages.includes(p)) pages.push(p); };
+  const pages: number[] = [];
+  const add = (p: number) => { if (p >= 1 && p <= totalPages && !pages.includes(p)) pages.push(p); };
   add(1);
   add(2);
   for (let p = page - 1; p <= page + 1; p++) add(p);
@@ -35,7 +36,7 @@ export default function Pagination({
   add(totalPages);
   pages.sort((a,b)=>a-b);
 
-  const renderPages = [];
+  const renderPages: React.ReactNode[] = [];
   let prev = 0;
   pages.forEach((p) => {
     if (prev && p - prev > 1) {

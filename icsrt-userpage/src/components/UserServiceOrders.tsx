@@ -1,3 +1,4 @@
+'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   FaComments, FaPaperPlane, FaEye, FaClock, FaDollarSign,
@@ -7,10 +8,10 @@ import {
 import { api } from '../lib/api';
 
 const UserServiceOrders = () => {
-  const [serviceOrders, setServiceOrders] = useState([]);
+  const [serviceOrders, setServiceOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [showModal, setShowModal] = useState(false);
   const [activeTab, setActiveTab] = useState('details'); // details, conversation
   

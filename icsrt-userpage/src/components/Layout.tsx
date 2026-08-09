@@ -1,3 +1,4 @@
+'use client';
 import React, { ReactNode } from 'react';
 import { Outlet } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';

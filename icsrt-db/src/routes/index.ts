@@ -27,6 +27,7 @@ router.use('/', whatsappRoutes);
 router.use('/', contactRoutes);
 router.use('/payment', paymentRoutes);
 router.use('/dashboard', dashboardRoutes);
+router.use('/dashboard-stats', dashboardRoutes);
 router.use('/', cmsRoutes);
 
 export default router;

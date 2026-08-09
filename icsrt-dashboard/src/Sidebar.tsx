@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { FaBars, FaTachometerAlt, FaUsers, FaFileAlt, FaClipboardList, FaEnvelope, FaCog, FaQuestionCircle, FaInfoCircle, FaEye, FaShoppingCart, FaEnvelopeOpen, FaSignOutAlt, FaLock, FaTicketAlt, FaShareAlt, FaGift } from 'react-icons/fa';

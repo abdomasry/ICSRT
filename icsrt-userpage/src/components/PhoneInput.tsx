@@ -1,3 +1,4 @@
+'use client';
 import React, { useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -15,7 +16,7 @@ const PhoneInput = ({
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [highlightedIndex, setHighlightedIndex] = useState(0);
-  const searchInputRef = React.useRef(null);
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
 
   // Comprehensive country codes list
   const countries = [

@@ -1,3 +1,4 @@
+'use client';
 import React, { useState, useEffect } from 'react';
 import { FaSync, FaUsers, FaQuestionCircle, FaClipboardList, FaNewspaper, FaComments } from 'react-icons/fa';
 import { api } from '../lib/api';
@@ -129,7 +130,7 @@ const RecentActivity = () => {
       
       <div className="space-y-4 max-h-96 overflow-y-auto">
         {/* Recent Users */}
-        {(Array.isArray(recentData.users) ? recentData.users : []).slice(0, 2).map((user, index) => (
+        {(Array.isArray(recentData.users) ? recentData.users : []).slice(0, 2).map((user: any, index) => (
           <ActivityItem
             key={`user-${index}`}
             icon={<FaUsers />}
@@ -142,7 +143,7 @@ const RecentActivity = () => {
         ))}
         
         {/* Recent Support Tickets */}
-        {(Array.isArray(recentData.tickets) ? recentData.tickets : []).slice(0, 2).map((ticket, index) => (
+        {(Array.isArray(recentData.tickets) ? recentData.tickets : []).slice(0, 2).map((ticket: any, index) => (
           <ActivityItem
             key={`ticket-${index}`}
             icon={<FaQuestionCircle />}
@@ -155,7 +156,7 @@ const RecentActivity = () => {
         ))}
         
         {/* Recent Service Orders */}
-        {(Array.isArray(recentData.serviceOrders) ? recentData.serviceOrders : []).slice(0, 2).map((order, index) => (
+        {(Array.isArray(recentData.serviceOrders) ? recentData.serviceOrders : []).slice(0, 2).map((order: any, index) => (
           <ActivityItem
             key={`order-${index}`}
             icon={<FaClipboardList />}
@@ -168,7 +169,7 @@ const RecentActivity = () => {
         ))}
         
         {/* Recent News */}
-        {(Array.isArray(recentData.news) ? recentData.news : []).slice(0, 1).map((newsItem, index) => (
+        {(Array.isArray(recentData.news) ? recentData.news : []).slice(0, 1).map((newsItem: any, index) => (
           <ActivityItem
             key={`news-${index}`}
             icon={<FaNewspaper />}
