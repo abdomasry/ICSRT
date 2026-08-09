@@ -1,0 +1,88 @@
+export interface User {
+  _id?: string;
+  id?: string;
+  name: string;
+  email: string;
+  phone?: string;
+  organization?: string;
+  country?: string;
+  role?: string;
+  isVerified?: boolean;
+}
+
+export interface Service {
+  _id?: string;
+  id?: string;
+  title: string;
+  name?: string;
+  description: string;
+  price: number;
+  category?: string;
+  icon?: string;
+  image?: string;
+  imageUrl?: string;
+  features?: string[];
+}
+
+export interface ServiceOrder {
+  _id?: string;
+  orderNumber: string;
+  userEmail: string;
+  serviceId?: string;
+  serviceName?: string;
+  serviceTitle?: string;
+  price?: number;
+  currency?: string;
+  status: string;
+  pricingStatus?: string;
+  adminNotes?: string;
+  pricingNotes?: string;
+  purchaseToken?: string;
+  purchaseLink?: string;
+  createdAt?: string;
+}
+
+export interface TicketMessage {
+  sender: string;
+  senderRole?: string;
+  text: string;
+  createdAt?: string;
+}
+
+export interface Ticket {
+  _id?: string;
+  ticketId: string;
+  userEmail: string;
+  userName?: string;
+  subject: string;
+  category?: string;
+  priority?: string;
+  status: string;
+  messages: TicketMessage[];
+  createdAt?: string;
+}
+
+export interface Article {
+  _id?: string;
+  id?: string;
+  title: string;
+  name?: string;
+  authors?: string;
+  abstract: string;
+  content?: string;
+  category?: string;
+  journal?: string;
+  documentUrl?: string | null;
+  image?: string;
+  imageUrl?: string;
+  createdAt?: string;
+}
+
+export interface SocialLink {
+  _id?: string;
+  platform: string;
+  url: string;
+  icon?: string;
+  label?: string;
+  enabled?: boolean;
+}

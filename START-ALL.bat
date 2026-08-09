@@ -1,32 +1,33 @@
 @echo off
-echo ====================================
-echo Starting ICSRT Project Components
-echo ====================================
-
+title ICSRT Project Launcher
+echo ===================================================
+echo              Starting ICSRT System
+echo ===================================================
 echo.
-echo Starting API Server (Port 3000)...
-start "ICSRT API Server" cmd /k "cd /d d:\Abdo\WORK\Real Projects\ICSRT++\icsrt-db && node server.js"
+
+set ROOT_DIR=%~dp0
+
+echo 1. Starting API Backend Server (Port 3000)...
+start "ICSRT Backend API" cmd /k "cd /d "%ROOT_DIR%icsrt-db" && npm start"
 
 timeout /t 3 /nobreak >nul
 
-echo.
-echo Starting Dashboard (Port 3001)...
-start "ICSRT Dashboard" cmd /k "cd /d d:\Abdo\WORK\Real Projects\ICSRT++\icsrt-dashboard && npm start"
+echo 2. Starting Admin Dashboard (Port 3001)...
+start "ICSRT Admin Dashboard" cmd /k "cd /d "%ROOT_DIR%icsrt-dashboard" && npm start"
 
 timeout /t 3 /nobreak >nul
 
-echo.
-echo Starting User Page (Port 3002)...
-start "ICSRT User Page" cmd /k "cd /d d:\Abdo\WORK\Real Projects\ICSRT++\icsrt-userpage && set PORT=3002 && npm start"
+echo 3. Starting User Portal (Port 3002)...
+start "ICSRT User Portal" cmd /k "cd /d "%ROOT_DIR%icsrt-userpage" && set PORT=3002 && npm start"
 
 echo.
-echo ====================================
-echo All components are starting...
+echo ===================================================
+echo All ICSRT services are starting!
 echo.
-echo Wait a few moments then access:
-echo - Dashboard: http://localhost:3001
-echo - User Page: http://localhost:3002
-echo - API: http://localhost:3000
-echo ====================================
-
+echo Access URLs:
+echo - Backend API:     http://localhost:3000
+echo - Admin Dashboard: http://localhost:3001
+echo - User Web Portal: http://localhost:3002
+echo ===================================================
+echo.
 pause
