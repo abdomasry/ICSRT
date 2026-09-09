@@ -1,1 +1,266 @@
-{"version":3,"caseSensitive":false,"basePath":"","rewrites":{"beforeFiles":[],"afterFiles":[],"fallback":[]},"redirects":[{"source":"/:path+/","destination":"/:path+","permanent":true,"internal":true,"regex":"^(?:\\/((?:[^\\/]+?)(?:\\/(?:[^\\/]+?))*))\\/$"}],"headers":[]}
+{
+  "version": 3,
+  "pages404": true,
+  "caseSensitive": false,
+  "basePath": "",
+  "redirects": [
+    {
+      "source": "/:path+/",
+      "destination": "/:path+",
+      "internal": true,
+      "statusCode": 308,
+      "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$"
+    }
+  ],
+  "headers": [],
+  "rewrites": {
+    "beforeFiles": [],
+    "afterFiles": [],
+    "fallback": []
+  },
+  "dynamicRoutes": [
+    {
+      "page": "/admins/edit/[id]",
+      "regex": "^/admins/edit/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/admins/edit/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/faq/edit/[id]",
+      "regex": "^/faq/edit/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/faq/edit/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/papers/edit/[id]",
+      "regex": "^/papers/edit/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/papers/edit/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/roles/edit/[id]",
+      "regex": "^/roles/edit/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/roles/edit/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/services/edit/[id]",
+      "regex": "^/services/edit/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/services/edit/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/users/edit/[id]",
+      "regex": "^/users/edit/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/users/edit/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/users/[id]",
+      "regex": "^/users/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/users/(?<nxtPid>[^/]+?)(?:/)?$"
+    }
+  ],
+  "staticRoutes": [
+    {
+      "page": "/",
+      "regex": "^/(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/(?:/)?$"
+    },
+    {
+      "page": "/_not-found",
+      "regex": "^/_not\\-found(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/about",
+      "regex": "^/about(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/about(?:/)?$"
+    },
+    {
+      "page": "/admins",
+      "regex": "^/admins(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admins(?:/)?$"
+    },
+    {
+      "page": "/admins/add",
+      "regex": "^/admins/add(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admins/add(?:/)?$"
+    },
+    {
+      "page": "/change-password",
+      "regex": "^/change\\-password(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/change\\-password(?:/)?$"
+    },
+    {
+      "page": "/collaborations",
+      "regex": "^/collaborations(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/collaborations(?:/)?$"
+    },
+    {
+      "page": "/contact-requests",
+      "regex": "^/contact\\-requests(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/contact\\-requests(?:/)?$"
+    },
+    {
+      "page": "/coupons",
+      "regex": "^/coupons(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/coupons(?:/)?$"
+    },
+    {
+      "page": "/dashboard",
+      "regex": "^/dashboard(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard(?:/)?$"
+    },
+    {
+      "page": "/faq",
+      "regex": "^/faq(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/faq(?:/)?$"
+    },
+    {
+      "page": "/faq/add",
+      "regex": "^/faq/add(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/faq/add(?:/)?$"
+    },
+    {
+      "page": "/login",
+      "regex": "^/login(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/login(?:/)?$"
+    },
+    {
+      "page": "/mission",
+      "regex": "^/mission(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/mission(?:/)?$"
+    },
+    {
+      "page": "/newsletter",
+      "regex": "^/newsletter(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/newsletter(?:/)?$"
+    },
+    {
+      "page": "/newsletter-subscribers",
+      "regex": "^/newsletter\\-subscribers(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/newsletter\\-subscribers(?:/)?$"
+    },
+    {
+      "page": "/papers",
+      "regex": "^/papers(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/papers(?:/)?$"
+    },
+    {
+      "page": "/papers/add",
+      "regex": "^/papers/add(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/papers/add(?:/)?$"
+    },
+    {
+      "page": "/roles",
+      "regex": "^/roles(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/roles(?:/)?$"
+    },
+    {
+      "page": "/roles/add",
+      "regex": "^/roles/add(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/roles/add(?:/)?$"
+    },
+    {
+      "page": "/service-orders",
+      "regex": "^/service\\-orders(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/service\\-orders(?:/)?$"
+    },
+    {
+      "page": "/services",
+      "regex": "^/services(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/services(?:/)?$"
+    },
+    {
+      "page": "/services/add",
+      "regex": "^/services/add(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/services/add(?:/)?$"
+    },
+    {
+      "page": "/social-media",
+      "regex": "^/social\\-media(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/social\\-media(?:/)?$"
+    },
+    {
+      "page": "/tickets",
+      "regex": "^/tickets(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/tickets(?:/)?$"
+    },
+    {
+      "page": "/users",
+      "regex": "^/users(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/users(?:/)?$"
+    },
+    {
+      "page": "/users/add",
+      "regex": "^/users/add(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/users/add(?:/)?$"
+    },
+    {
+      "page": "/vision",
+      "regex": "^/vision(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/vision(?:/)?$"
+    }
+  ],
+  "dataRoutes": [],
+  "rsc": {
+    "header": "rsc",
+    "varyHeader": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+    "prefetchHeader": "next-router-prefetch",
+    "didPostponeHeader": "x-nextjs-postponed",
+    "contentTypeHeader": "text/x-component",
+    "suffix": ".rsc",
+    "prefetchSuffix": ".prefetch.rsc",
+    "prefetchSegmentHeader": "next-router-segment-prefetch",
+    "prefetchSegmentSuffix": ".segment.rsc",
+    "prefetchSegmentDirSuffix": ".segments"
+  },
+  "rewriteHeaders": {
+    "pathHeader": "x-nextjs-rewritten-path",
+    "queryHeader": "x-nextjs-rewritten-query"
+  }
+}

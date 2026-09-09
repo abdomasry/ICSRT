@@ -148,6 +148,7 @@ const SignUp = () => {
 
   try {
       const signupData = {
+        name: `${form.firstName} ${form.lastName}`.trim(),
         firstName: form.firstName,
         lastName: form.lastName,
         fullName: `${form.firstName} ${form.lastName}`.trim(),

@@ -67,14 +67,17 @@ const UserProfile = () => {
         institution: form.institution,
         bio: form.bio,
       };
-  const res = await api.put(`/api/users/${user._id}`, payload);
+      const userId = user?._id || user?.id || user?.email;
+      if (!userId) {
+        throw new Error("User identifier missing");
+      }
+      const res = await api.put(`/api/users/${encodeURIComponent(userId)}`, payload);
       if (res && res.success !== false) {
         const updated = res.user || res.data || null;
         if (updated) {
           updateUser(updated);
         } else {
-          // Fallback: re-fetch user from API
-          try { await api.get(`/api/users/${user._id}`).then(updateUser); } catch {}
+          try { await api.get(`/api/users/${encodeURIComponent(userId)}`).then(updateUser); } catch {}
         }
         setMessage("Profile updated successfully!");
       } else {

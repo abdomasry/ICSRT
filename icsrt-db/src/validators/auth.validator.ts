@@ -9,7 +9,8 @@ export function validatePassword(password: string): boolean {
 
 export function validateSignupPayload(body: any) {
   const errors: string[] = [];
-  if (!body.name || typeof body.name !== 'string' || !body.name.trim()) {
+  const name = body.name || body.fullName || `${body.firstName || ''} ${body.lastName || ''}`.trim();
+  if (!name) {
     errors.push('Name is required');
   }
   if (!validateEmail(body.email)) {

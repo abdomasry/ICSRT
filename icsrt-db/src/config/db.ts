@@ -1,5 +1,6 @@
 import { MongoClient, Db } from 'mongodb';
 import { MONGODB_URI, DATABASE_NAME } from './env';
+import logger from '../utils/logger';
 
 let db: Db | null = null;
 let client: MongoClient | null = null;
@@ -17,7 +18,7 @@ export async function connectWithRetry(retries = 5, interval = 5000): Promise<Db
                 await db.command({ ping: 1 });
                 return db;
             } catch (pingError) {
-                console.log('🔄 Connection stale, reconnecting...');
+                logger.info('🔄 Connection stale, reconnecting...');
             }
         }
 
@@ -26,20 +27,21 @@ export async function connectWithRetry(retries = 5, interval = 5000): Promise<Db
             let lastError: any;
             for (let i = 0; i < retries; i++) {
                 try {
-                    console.log(`📡 Connecting to MongoDB (attempt ${i + 1}/${retries})...`);
+                    logger.info(`📡 Connecting to MongoDB (attempt ${i + 1}/${retries})...`);
                     if (client) {
                         try {
                             await client.close();
                         } catch (closeError: any) {
-                            console.warn('⚠️ Error closing client:', closeError.message);
+                            logger.warn(`⚠️ Error closing client: ${closeError.message}`);
                         }
                     }
 
                     client = new MongoClient(MONGODB_URI, {
-                        maxPoolSize: 10,
-                        serverSelectionTimeoutMS: 5000,
-                        socketTimeoutMS: 45000,
-                        connectTimeoutMS: 10000,
+                        maxPoolSize: 20,
+                        minPoolSize: 2,
+                        serverSelectionTimeoutMS: 8000,
+                        socketTimeoutMS: 30000,
+                        connectTimeoutMS: 8000,
                         retryWrites: true,
                         retryReads: true,
                         tlsAllowInvalidCertificates: true
@@ -48,15 +50,15 @@ export async function connectWithRetry(retries = 5, interval = 5000): Promise<Db
                     await client.connect();
                     db = client.db(DATABASE_NAME);
                     await db.command({ ping: 1 });
-                    console.log(`✅ Connected to MongoDB - Database: ${DATABASE_NAME}`);
+                    logger.info(`✅ Connected to MongoDB - Database: ${DATABASE_NAME}`);
 
                     client.on('close', () => {
-                        console.warn('⚠️ MongoDB connection closed');
+                        logger.warn('⚠️ MongoDB connection closed');
                         db = null;
                     });
 
                     client.on('error', (error) => {
-                        console.error('❌ MongoDB connection error:', error);
+                        logger.error('❌ MongoDB connection error:', error);
                         db = null;
                     });
 
@@ -64,7 +66,7 @@ export async function connectWithRetry(retries = 5, interval = 5000): Promise<Db
                     return;
                 } catch (error: any) {
                     lastError = error;
-                    console.error(`❌ MongoDB connection attempt ${i + 1} failed:`, error.message);
+                    logger.error(`❌ MongoDB connection attempt ${i + 1} failed: ${error.message}`);
                     if (i < retries - 1) {
                         await new Promise(r => setTimeout(r, interval));
                     }
@@ -75,7 +77,7 @@ export async function connectWithRetry(retries = 5, interval = 5000): Promise<Db
 
         return await connectionPromise;
     } catch (error) {
-        console.error('❌ Fatal MongoDB connection error:', error);
+        logger.error('❌ Fatal MongoDB connection error:', error);
         throw error;
     } finally {
         isConnecting = false;
@@ -92,15 +94,25 @@ export function getClient(): MongoClient | null {
     return client;
 }
 
-process.on('SIGINT', async () => {
+export async function isDBConnected(): Promise<boolean> {
+    if (!db) return false;
     try {
-        if (client) {
-            console.log('Closing MongoDB connection...');
-            await client.close();
-            console.log('MongoDB connection closed.');
-        }
-    } catch (error) {
-        console.error('Error during cleanup:', error);
+        await db.command({ ping: 1 });
+        return true;
+    } catch (e) {
+        return false;
     }
-    process.exit(0);
-});
+}
+
+export async function closeDB(): Promise<void> {
+    if (client) {
+        try {
+            await client.close();
+            db = null;
+            client = null;
+            logger.info('🔌 MongoDB connection closed cleanly.');
+        } catch (err: any) {
+            logger.error('❌ Error closing MongoDB connection:', err);
+        }
+    }
+}

@@ -9,9 +9,16 @@ export class ArticleModel {
     return db.collection('research_articles');
   }
 
-  static async find(query = {}): Promise<IArticle[]> {
+  static async find(query = {}, options: { limit?: number; skip?: number } = {}): Promise<IArticle[]> {
     const collection = await this.getCollection();
-    return (await collection.find(query).sort({ createdAt: -1 }).toArray()) as IArticle[];
+    let cursor = collection.find(query).sort({ createdAt: -1 });
+    if (options.skip && options.skip > 0) {
+      cursor = cursor.skip(options.skip);
+    }
+    if (options.limit && options.limit > 0) {
+      cursor = cursor.limit(options.limit);
+    }
+    return (await cursor.toArray()) as IArticle[];
   }
 
   static async findById(id: any): Promise<IArticle | null> {

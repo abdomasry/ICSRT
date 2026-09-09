@@ -15,6 +15,7 @@ import cmsRoutes from './cms.routes';
 
 const router = express.Router();
 
+router.use('/auth', authRoutes);
 router.use('/', authRoutes);
 router.use('/', uploadRoutes);
 router.use('/users', userRoutes);
@@ -25,7 +26,11 @@ router.use('/', articleRoutes);
 router.use('/', socialRoutes);
 router.use('/', whatsappRoutes);
 router.use('/', contactRoutes);
+router.use('/', paymentRoutes);
 router.use('/payment', paymentRoutes);
+router.use('/payments', paymentRoutes);
+router.use('/user/payments', paymentRoutes);
+router.use('/user', paymentRoutes);
 router.use('/dashboard', dashboardRoutes);
 router.use('/dashboard-stats', dashboardRoutes);
 router.use('/', cmsRoutes);

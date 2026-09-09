@@ -21,10 +21,17 @@ export function useNavigate() {
       if (to === -1) router.back();
       return;
     }
+    let target = to;
+    if (typeof to === 'object' && to !== null) {
+      target = (to.pathname || '') + (to.search || '') + (to.hash || '');
+    }
+    if (typeof target !== 'string') {
+      target = String(target || '/');
+    }
     if (options?.replace) {
-      router.replace(to);
+      router.replace(target);
     } else {
-      router.push(to);
+      router.push(target);
     }
   };
 }

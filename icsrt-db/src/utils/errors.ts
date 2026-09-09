@@ -1,0 +1,82 @@
+export class AppError extends Error {
+  public readonly statusCode: number;
+  public readonly code: string;
+  public readonly isOperational: boolean;
+  public readonly details?: any;
+
+  constructor(
+    message: string,
+    statusCode = 500,
+    code = 'INTERNAL_SERVER_ERROR',
+    details?: any,
+    isOperational = true
+  ) {
+    super(message);
+    Object.setPrototypeOf(this, new.target.prototype);
+    this.statusCode = statusCode;
+    this.code = code;
+    this.details = details;
+    this.isOperational = isOperational;
+    Error.captureStackTrace(this, this.constructor);
+  }
+}
+
+export class BadRequestError extends AppError {
+  constructor(message = 'Bad Request', code = 'BAD_REQUEST', details?: any) {
+    super(message, 400, code, details);
+  }
+}
+
+export class UnauthorizedError extends AppError {
+  constructor(message = 'Unauthorized access', code = 'AUTH_REQUIRED', details?: any) {
+    super(message, 401, code, details);
+  }
+}
+
+export class ForbiddenError extends AppError {
+  constructor(message = 'Forbidden access', code = 'FORBIDDEN', details?: any) {
+    super(message, 403, code, details);
+  }
+}
+
+export class NotFoundError extends AppError {
+  constructor(message = 'Resource not found', code = 'NOT_FOUND', details?: any) {
+    super(message, 404, code, details);
+  }
+}
+
+export class ConflictError extends AppError {
+  constructor(message = 'Resource conflict', code = 'CONFLICT', details?: any) {
+    super(message, 409, code, details);
+  }
+}
+
+export class ValidationError extends AppError {
+  constructor(message = 'Validation failed', details?: any, code = 'VALIDATION_ERROR') {
+    super(message, 422, code, details);
+  }
+}
+
+export class RateLimitError extends AppError {
+  constructor(message = 'Too many requests, please try again later', code = 'RATE_LIMITED') {
+    super(message, 429, code);
+  }
+}
+
+export class GatewayTimeoutError extends AppError {
+  constructor(message = 'External service request timed out', code = 'GATEWAY_TIMEOUT', details?: any) {
+    super(message, 504, code, details);
+  }
+}
+
+export class ServiceUnavailableError extends AppError {
+  constructor(message = 'Service temporarily unavailable', code = 'SERVICE_UNAVAILABLE', details?: any) {
+    super(message, 503, code, details);
+  }
+}
+
+export class InternalServerError extends AppError {
+  constructor(message = 'Internal server error', code = 'INTERNAL_SERVER_ERROR') {
+    super(message, 500, code, undefined, false);
+  }
+}

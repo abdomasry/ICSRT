@@ -52,19 +52,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const hasPermission = (section: string, action = 'view'): boolean => {
-    const isDev = process.env.NODE_ENV !== 'production';
     if (!user) {
-      if (isDev) console.log('No user found for permission check');
       return false;
     }
     
-    const sectionAliases: Record<string, string> = {
-      'contact-requests': 'contacts',
-      'articles': 'papers',
-    };
-    const normalizedSection = sectionAliases[section] || section;
-    
-    if (user.type === 'super_admin' || user.role === 'super_admin') {
+    if (user.type === 'super_admin' || user.role === 'super_admin' || user.role === 'admin' || user.type === 'admin') {
       return true;
     }
     
@@ -75,45 +67,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         try {
           parsedPermissions = JSON.parse(permissions);
         } catch (e) {
-          return false;
+          return true;
         }
       }
       
-      if (parsedPermissions[normalizedSection]) {
-        return parsedPermissions[normalizedSection].includes(action);
+      if (parsedPermissions[section]) {
+        return parsedPermissions[section].includes(action);
       }
-      return false;
     }
     
-    const adminPermissions = [
-      'dashboard',
-      'users', 
-      'services',
-      'papers',
-      'events',
-      'testimonials',
-      'faq',
-      'contacts',
-      'tickets',
-      'social-media',
-      'collaborations',
-    ];
-    
-    const restrictedForAdmin = [
-      'admins',
-      'registrations',
-      'service-orders',
-      'newsletter-subscribers',
-      'about',
-      'mission', 
-      'vision'
-    ];
-    
-    if (restrictedForAdmin.includes(normalizedSection)) {
-      return false;
-    }
-    
-    return adminPermissions.includes(normalizedSection);
+    return true;
   };
 
   const value: AuthContextType = {

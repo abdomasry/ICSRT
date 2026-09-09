@@ -21,9 +21,16 @@ export class ContactModel {
     return { _id: res.insertedId, ...newContact } as IContact;
   }
 
-  static async findAll(): Promise<IContact[]> {
+  static async findAll(query = {}, options: { limit?: number; skip?: number } = {}): Promise<IContact[]> {
     const collection = await this.getCollection();
-    return (await collection.find({}).sort({ createdAt: -1 }).toArray()) as IContact[];
+    let cursor = collection.find(query).sort({ createdAt: -1 });
+    if (options.skip && options.skip > 0) {
+      cursor = cursor.skip(options.skip);
+    }
+    if (options.limit && options.limit > 0) {
+      cursor = cursor.limit(options.limit);
+    }
+    return (await cursor.toArray()) as IContact[];
   }
 
   static async findById(id: any): Promise<IContact | null> {

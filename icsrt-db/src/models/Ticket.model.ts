@@ -32,9 +32,16 @@ export class TicketModel {
     return (await collection.findOne({ ticketId: id.toString() })) as ITicket | null;
   }
 
-  static async find(query = {}): Promise<ITicket[]> {
+  static async find(query = {}, options: { limit?: number; skip?: number } = {}): Promise<ITicket[]> {
     const collection = await this.getCollection();
-    return (await collection.find(query).sort({ createdAt: -1 }).toArray()) as ITicket[];
+    let cursor = collection.find(query).sort({ createdAt: -1 });
+    if (options.skip && options.skip > 0) {
+      cursor = cursor.skip(options.skip);
+    }
+    if (options.limit && options.limit > 0) {
+      cursor = cursor.limit(options.limit);
+    }
+    return (await cursor.toArray()) as ITicket[];
   }
 
   static async updateById(id: any, updateData: Partial<ITicket>): Promise<ITicket | null> {

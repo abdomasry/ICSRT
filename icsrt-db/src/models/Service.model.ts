@@ -78,9 +78,16 @@ export class ServiceModel {
     return (await collection.findOne({ orderNumber: id.toString() })) as IServiceOrder | null;
   }
 
-  static async findOrders(query = {}): Promise<IServiceOrder[]> {
+  static async findOrders(query = {}, options: { limit?: number; skip?: number } = {}): Promise<IServiceOrder[]> {
     const collection = await this.getOrdersCollection();
-    return (await collection.find(query).sort({ createdAt: -1 }).toArray()) as IServiceOrder[];
+    let cursor = collection.find(query).sort({ createdAt: -1 });
+    if (options.skip && options.skip > 0) {
+      cursor = cursor.skip(options.skip);
+    }
+    if (options.limit && options.limit > 0) {
+      cursor = cursor.limit(options.limit);
+    }
+    return (await cursor.toArray()) as IServiceOrder[];
   }
 
   static async updateOrderById(id: any, updateData: Partial<IServiceOrder>): Promise<IServiceOrder | null> {

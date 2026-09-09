@@ -1,5 +1,6 @@
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import crypto from 'crypto';
+import logger from '../utils/logger';
 
 export class PaymobService {
   private config = {
@@ -13,17 +14,29 @@ export class PaymobService {
     BASE_URL: 'https://accept.paymob.com/api'
   };
 
+  private http: AxiosInstance;
+
+  constructor() {
+    this.http = axios.create({
+      baseURL: this.config.BASE_URL,
+      timeout: 10000, // 10s strict network timeout
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+  }
+
   async authenticate(): Promise<string> {
     try {
       if (this.config.AUTH_TOKEN && this.config.AUTH_TOKEN.length > 0) {
         return this.config.AUTH_TOKEN;
       }
-      const response = await axios.post(`${this.config.BASE_URL}/auth/tokens`, {
+      const response = await this.http.post('/auth/tokens', {
         api_key: this.config.API_KEY
       });
       return response.data.token;
     } catch (error: any) {
-      console.error('❌ Paymob authentication failed:', error.response?.data || error.message);
+      logger.error('❌ Paymob authentication failed:', error.response?.data || error.message);
       throw new Error('Failed to authenticate with Paymob');
     }
   }
@@ -46,10 +59,10 @@ export class PaymobService {
         merchant_order_id: orderData.orderNumber || null
       };
 
-      const response = await axios.post(`${this.config.BASE_URL}/ecommerce/orders`, paymobOrder);
+      const response = await this.http.post('/ecommerce/orders', paymobOrder);
       return response.data;
     } catch (error: any) {
-      console.error('❌ Paymob order creation failed:', error.response?.data || error.message);
+      logger.error('❌ Paymob order creation failed:', error.response?.data || error.message);
       throw new Error('Failed to create order on Paymob');
     }
   }
@@ -84,10 +97,10 @@ export class PaymobService {
         integration_id: parseInt(integrationId, 10)
       };
 
-      const response = await axios.post(`${this.config.BASE_URL}/acceptance/payment_keys`, paymentKeyData);
+      const response = await this.http.post('/acceptance/payment_keys', paymentKeyData);
       return response.data.token;
     } catch (error: any) {
-      console.error('❌ Paymob payment key generation failed:', error.response?.data || error.message);
+      logger.error('❌ Paymob payment key generation failed:', error.response?.data || error.message);
       throw new Error('Failed to generate Paymob payment key');
     }
   }
@@ -119,7 +132,7 @@ export class PaymobService {
         iframeId: this.config.IFRAME_ID
       };
     } catch (error: any) {
-      console.error('❌ Checkout initiation failed:', error.message);
+      logger.error('❌ Checkout initiation failed:', error.message);
       return {
         success: false,
         error: error.message
@@ -128,29 +141,32 @@ export class PaymobService {
   }
 
   verifyHMAC(data: any, receivedHmac: string): boolean {
-    if (!this.config.HMAC_SECRET) return true;
+    if (!this.config.HMAC_SECRET || !receivedHmac || !data) {
+      logger.warn('⚠️ HMAC verification rejected: missing secret, signature, or payload data');
+      return false;
+    }
     try {
       const concatenated = [
-        data.amount_cents,
-        data.created_at,
-        data.currency,
-        data.error_occured,
-        data.has_parent_transaction,
-        data.id,
-        data.integration_id,
-        data.is_3d_secure,
-        data.is_auth,
-        data.is_capture,
-        data.is_refunded,
-        data.is_standalone_payment,
-        data.order.id,
-        data.owner,
-        data.pending,
-        data.source_data.pan,
-        data.source_data.sub_type,
-        data.source_data.type,
-        data.success
-      ].join('');
+        data.amount_cents ?? '',
+        data.created_at ?? '',
+        data.currency ?? '',
+        data.error_occured ?? '',
+        data.has_parent_transaction ?? '',
+        data.id ?? '',
+        data.integration_id ?? '',
+        data.is_3d_secure ?? '',
+        data.is_auth ?? '',
+        data.is_capture ?? '',
+        data.is_refunded ?? '',
+        data.is_standalone_payment ?? '',
+        data.order?.id ?? '',
+        data.owner ?? '',
+        data.pending ?? '',
+        data.source_data?.pan ?? '',
+        data.source_data?.sub_type ?? '',
+        data.source_data?.type ?? '',
+        data.success ?? ''
+      ].map(v => String(v)).join('');
 
       const calculatedHmac = crypto
         .createHmac('sha512', this.config.HMAC_SECRET)
@@ -159,7 +175,7 @@ export class PaymobService {
 
       return calculatedHmac.toLowerCase() === receivedHmac.toLowerCase();
     } catch (error) {
-      console.error('❌ Error verifying HMAC:', error);
+      logger.error('❌ Error verifying HMAC:', error);
       return false;
     }
   }

@@ -6,7 +6,11 @@
   "scripts": {
     "start": "npx --no-install tsx src/server.ts",
     "dev": "npx --no-install tsx watch src/server.ts",
-    "build": "tsc"
+    "build": "tsc --skipLibCheck",
+    "test": "npx --no-install tsx tests/security_regression.test.ts && npx --no-install tsx tests/queues_and_workers.test.ts && npx --no-install tsx tests/worker_consumption.test.ts && npx --no-install tsx tests/caching_and_performance.test.ts && npx --no-install tsx tests/reliability_and_errors.test.ts",
+    "db:index": "npx --no-install tsx src/scripts/createIndexes.ts",
+    "worker:email": "npx --no-install tsx src/workers/email.worker.ts",
+    "worker:whatsapp": "npx --no-install tsx src/workers/whatsapp.worker.ts"
   },
   "keywords": [
     "icsrt",
@@ -18,28 +22,35 @@
   "dependencies": {
     "axios": "^1.7.9",
     "bcryptjs": "^3.0.3",
+    "bullmq": "^6.1.2",
+    "cloudinary": "^2.10.0",
+    "compression": "^1.8.1",
     "cors": "^2.8.6",
     "crypto": "^1.0.1",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "express-mongo-sanitize": "^2.2.0",
-    "express-rate-limit": "^8.6.2",
+    "express-rate-limit": "^7.5.0",
     "helmet": "^8.3.0",
+    "ioredis": "^6.0.0",
     "jsonwebtoken": "^9.0.3",
     "mongodb": "^7.5.0",
     "multer": "^1.4.5-lts.1",
     "node-fetch": "^2.7.0",
     "nodemailer": "^9.0.5",
     "qrcode-terminal": "^0.12.0",
-    "whatsapp-web.js": "^1.31.0"
+    "whatsapp-web.js": "^1.31.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
+    "@types/compression": "^1.8.1",
     "@types/cors": "^2.8.19",
     "@types/express": "5.0.6",
+    "@types/ioredis": "^4.28.10",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/multer": "^1.4.12",
-    "@types/node": "^22.13.0",
+    "@types/node": "^20.11.0",
     "@types/nodemailer": "^7.0.0",
     "nodemon": "^3.1.14",
     "ts-node": "^10.9.2",

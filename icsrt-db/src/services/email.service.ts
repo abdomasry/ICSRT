@@ -1,6 +1,7 @@
 import transporter from '../config/mailer';
 import { getFrontendUrl } from '../config/env';
 import logger from '../utils/logger';
+import { enqueueVerificationEmail, enqueuePasswordResetEmail, enqueueGenericEmail } from '../queues/email.queue';
 
 export interface SendEmailOptions {
   to: string;
@@ -9,7 +10,10 @@ export interface SendEmailOptions {
   text?: string;
 }
 
-export async function sendEmail({ to, subject, html, text }: SendEmailOptions) {
+// -------------------------------------------------------------
+// Direct SMTP Execution (Used by BullMQ Worker & Fallback)
+// -------------------------------------------------------------
+export async function sendEmailDirect({ to, subject, html, text }: SendEmailOptions) {
   try {
     const fromAddress = process.env.EMAIL_FROM || process.env.SMTP_USER || process.env.EMAIL_USER || 'support@icsrt.cloud';
     const mailOptions = {
@@ -20,15 +24,15 @@ export async function sendEmail({ to, subject, html, text }: SendEmailOptions) {
       text
     };
     const result = await transporter.sendMail(mailOptions);
-    logger.success(`Email sent to ${to} (MessageId: ${result.messageId})`);
+    logger.success(`Email delivered directly to ${to} (MessageId: ${result.messageId})`);
     return { success: true, messageId: result.messageId };
   } catch (error: any) {
-    logger.error(`Failed to send email to ${to}: ${error.message}`);
+    logger.error(`Failed to deliver email directly to ${to}: ${error.message}`);
     return { success: false, error: error.message };
   }
 }
 
-export async function sendVerificationEmail(email: string, token: string, name = 'User') {
+export async function sendVerificationEmailDirect(email: string, token: string, name = 'User') {
   const frontendUrl = getFrontendUrl();
   const verifyLink = `${frontendUrl}/verify-email?token=${token}`;
   
@@ -52,14 +56,14 @@ export async function sendVerificationEmail(email: string, token: string, name =
     </div>
   `;
 
-  return await sendEmail({
+  return await sendEmailDirect({
     to: email,
     subject: 'Verify Your Email Address - ICSRT',
     html
   });
 }
 
-export async function sendPasswordResetEmail(email: string, token: string, name = 'User') {
+export async function sendPasswordResetEmailDirect(email: string, token: string, name = 'User') {
   const frontendUrl = getFrontendUrl();
   const resetLink = `${frontendUrl}/reset-password?token=${token}`;
   
@@ -85,9 +89,27 @@ export async function sendPasswordResetEmail(email: string, token: string, name 
     </div>
   `;
 
-  return await sendEmail({
+  return await sendEmailDirect({
     to: email,
     subject: 'Password Reset Request - ICSRT',
     html
   });
+}
+
+// -------------------------------------------------------------
+// Asynchronous Queue-Dispatched Exports (HTTP Non-Blocking)
+// -------------------------------------------------------------
+export async function sendEmail(options: SendEmailOptions) {
+  await enqueueGenericEmail(options);
+  return { success: true, queued: true };
+}
+
+export async function sendVerificationEmail(email: string, token: string, name = 'User') {
+  await enqueueVerificationEmail(email, token, name);
+  return { success: true, queued: true };
+}
+
+export async function sendPasswordResetEmail(email: string, token: string, name = 'User') {
+  await enqueuePasswordResetEmail(email, token, name);
+  return { success: true, queued: true };
 }

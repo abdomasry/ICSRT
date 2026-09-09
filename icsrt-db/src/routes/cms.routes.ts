@@ -4,7 +4,7 @@ import { requireAdmin, optionalAuth } from '../middleware/auth.middleware';
 
 const router = express.Router();
 
-const cmsCollections = [
+const publicCmsCollections = [
   'about',
   'events',
   'faq',
@@ -13,39 +13,70 @@ const cmsCollections = [
   'gallery',
   'conferences',
   'journals',
-  'registrations',
-  'admins',
-  'roles',
   'collaborations',
-  'newsletter',
   'vision',
   'mission'
 ];
 
-cmsCollections.forEach(col => {
+const adminCmsCollections = [
+  'admins',
+  'roles',
+  'registrations'
+];
+
+// Publicly readable CMS collections (admin write)
+publicCmsCollections.forEach(col => {
   router.get(`/${col}`, optionalAuth, (req, res, next) => {
     req.params.collection = col;
-    cmsController.getCollectionItems(req, res);
+    return cmsController.getCollectionItems(req, res, next);
   });
 
   router.get(`/${col}/:id`, optionalAuth, (req, res, next) => {
     req.params.collection = col;
-    cmsController.getCollectionItemById(req, res);
+    return cmsController.getCollectionItemById(req, res, next);
   });
 
   router.post(`/${col}`, requireAdmin, (req, res, next) => {
     req.params.collection = col;
-    cmsController.createCollectionItem(req, res);
+    return cmsController.createCollectionItem(req, res, next);
   });
 
   router.put(`/${col}/:id`, requireAdmin, (req, res, next) => {
     req.params.collection = col;
-    cmsController.updateCollectionItem(req, res);
+    return cmsController.updateCollectionItem(req, res, next);
   });
 
   router.delete(`/${col}/:id`, requireAdmin, (req, res, next) => {
     req.params.collection = col;
-    cmsController.deleteCollectionItem(req, res);
+    return cmsController.deleteCollectionItem(req, res, next);
+  });
+});
+
+// Admin-only CMS collections (admin read & write)
+adminCmsCollections.forEach(col => {
+  router.get(`/${col}`, requireAdmin, (req, res, next) => {
+    req.params.collection = col;
+    return cmsController.getCollectionItems(req, res, next);
+  });
+
+  router.get(`/${col}/:id`, requireAdmin, (req, res, next) => {
+    req.params.collection = col;
+    return cmsController.getCollectionItemById(req, res, next);
+  });
+
+  router.post(`/${col}`, requireAdmin, (req, res, next) => {
+    req.params.collection = col;
+    return cmsController.createCollectionItem(req, res, next);
+  });
+
+  router.put(`/${col}/:id`, requireAdmin, (req, res, next) => {
+    req.params.collection = col;
+    return cmsController.updateCollectionItem(req, res, next);
+  });
+
+  router.delete(`/${col}/:id`, requireAdmin, (req, res, next) => {
+    req.params.collection = col;
+    return cmsController.deleteCollectionItem(req, res, next);
   });
 });
 

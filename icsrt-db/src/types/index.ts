@@ -38,10 +38,14 @@ export interface IService {
 export interface IServiceOrder {
   _id?: ObjectId;
   orderNumber: string;
+  userId?: string | ObjectId;
+  userName?: string;
   userEmail: string;
   serviceId?: string;
   serviceName?: string;
   serviceTitle?: string;
+  requirements?: string;
+  files?: any[];
   price?: number;
   currency?: string;
   status: string;
@@ -51,6 +55,11 @@ export interface IServiceOrder {
   purchaseToken?: string;
   purchaseLink?: string;
   purchaseTokenExpires?: Date;
+  paymobTransactionId?: string | number;
+  paidAmountCents?: number;
+  paidCurrency?: string;
+  paidAt?: Date | string;
+  paymentMetadata?: Record<string, any>;
   customerInfo?: any;
   createdAt?: Date;
   updatedAt?: Date;
