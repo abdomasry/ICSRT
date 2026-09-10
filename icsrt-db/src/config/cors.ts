@@ -15,7 +15,11 @@ export const allowedOrigins = envOrigins.length ? envOrigins : [
   'http://localhost:3002',
   'http://localhost:3003',
   'http://localhost:3004',
-  'http://localhost:5173'
+  'http://localhost:5173',
+  'icsrt.vercel.app',
+  'https://icsrt.vercel.app',
+  'icsrt-l4691rw62-abdomasry2711-4527s-projects.vercel.app',
+  'https://icsrt-l4691rw62-abdomasry2711-4527s-projects.vercel.app',
 ];
 
 export const corsOptions: CorsOptions = {
