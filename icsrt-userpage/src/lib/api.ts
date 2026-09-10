@@ -5,9 +5,9 @@ declare global {
 }
 
 const getApiUrl = (): string => {
-  if (process.env.REACT_APP_API_BASE_URL) {
-    return process.env.REACT_APP_API_BASE_URL;
-  }
+if (process.env.NEXT_PUBLIC_API_BASE_URL) {
+  return process.env.NEXT_PUBLIC_API_BASE_URL;
+}
   
   if (typeof window !== 'undefined' && window.__API_BASE_URL__) {
     return window.__API_BASE_URL__;
