@@ -1,7 +1,7 @@
 import { CorsOptions } from 'cors';
 import { getProductionDomains } from './env';
 
-const envOrigins = (process.env.CORS_ORIGINS || process.env.ALLOWED_ORIGINS || '')
+const envOrigins = (process.env.NEXT_PUBLIC_API_BASE_URL || process.env.CORS_ORIGINS || process.env.ALLOWED_ORIGINS || '*')
   .split(',')
   .map(s => s.trim())
   .filter(Boolean);
@@ -10,7 +10,6 @@ const productionDomains = getProductionDomains();
 
 export const allowedOrigins = envOrigins.length ? envOrigins : [
   ...productionDomains,
-  '*',
   'http://localhost:3000',
   'http://localhost:3001',
   'http://localhost:3002',
