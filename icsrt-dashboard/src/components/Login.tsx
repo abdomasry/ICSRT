@@ -18,35 +18,15 @@ const Login = ({ onLogin }) => {
     setError('');
 
     try {
-      // Check for super admin hardcoded credentials
-      if (credentials.username === 'superadmin' && credentials.password === 'superadmin') {
-        const adminData = {
-          username: 'superadmin',
-          type: 'super_admin',
-          name: 'Super Administrator'
-        };
-        localStorage.setItem('icsrt_admin', JSON.stringify(adminData));
-        
-        // Call onLogin and add a small delay to ensure state update
-        onLogin(adminData);
-        
-        // Force redirect after login (backup method)
-        setTimeout(() => {
-          window.location.href = '/';
-        }, 100);
-        
-        return;
-      }
-
       // Call server-side admin login endpoint (handles hashed passwords)
       try {
-        const resp = await api.post('/api/admin/login', { username: credentials.username, password: credentials.password });
-        const admin = resp?.admin || resp;
+        const resp = await api.post('/api/auth/admin-login', { email: credentials.username.trim(), password: credentials.password });
+        const admin = resp?.user;
 
-        if (admin) {
+        if (resp?.success && resp?.token && admin && ['admin', 'super_admin'].includes(admin.role)) {
           const adminData = {
             username: admin.email || admin.username,
-            type: admin.type || 'admin',
+            type: admin.role,
             name: admin.name,
             id: admin._id || admin.id,
             role_id: admin.role_id,
@@ -62,11 +42,11 @@ const Login = ({ onLogin }) => {
             window.location.href = '/';
           }, 100);
         } else {
-          setError('Invalid username or password');
+          setError('The server did not return a valid administrator session.');
         }
       } catch (serverErr) {
         console.error('Server connection error:', serverErr);
-        setError('Unable to connect to server or login failed. Please make sure the backend is running on port 3000.');
+        setError('Login failed. Check your administrator email and password. If the problem continues, contact support.');
       }
     } catch (err) {
       console.error('Login error:', err);
@@ -87,17 +67,17 @@ const Login = ({ onLogin }) => {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Username/Email
+              Email
             </label>
             <input
-              type="text"
+              type="email"
               name="username"
               value={credentials.username}
               onChange={handleChange}
               required
               disabled={loading}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
-              placeholder="Enter your username or email"
+              placeholder="Enter your administrator email"
             />
           </div>
 
