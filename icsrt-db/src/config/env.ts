@@ -16,8 +16,8 @@ export const CLOUDINARY_URL = process.env.CLOUDINARY_URL || '';
 export const getProductionDomains = (): string[] => {
   const domains: string[] = [];
   if (process.env.NODE_ENV === 'production') {
-    domains.push('https://icsrt.cloud');
-    domains.push('https://admin.icsrt.cloud');
+    domains.push('https://icsrt.vercel.app');
+    domains.push('https://admin.icsrt.vercel.app');
   }
   return domains;
 };
@@ -27,7 +27,7 @@ export const getFrontendUrl = (): string => {
     return process.env.FRONTEND_URL;
   }
   if (process.env.NODE_ENV === 'production') {
-    return 'https://icsrt.cloud';
+    return 'https://icsrt.vercel.app';
   }
   return 'http://localhost:3002';
 };
