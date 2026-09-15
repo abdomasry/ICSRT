@@ -42,14 +42,14 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white dark:bg-gray-900 shadow-lg sticky top-0 z-50 transition-colors duration-300">
+    <nav className="brand-nav sticky top-0 z-50 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center">
             <Link 
               to="/" 
-              className="text-2xl font-bold text-blue-700 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors duration-300"
+              className="brand-logo transition-colors duration-300"
             >
               ICSRT
             </Link>
@@ -61,15 +61,15 @@ const Navbar = () => {
               <Link
                 key={item.key}
                 to={item.href}
-                className={`relative font-medium transition-all duration-300 hover:text-blue-800 dark:hover:text-blue-300 ${
+                className={`brand-nav-link relative transition-all duration-300 ${
                   isActiveRoute(item.href)
-                    ? 'text-blue-800 dark:text-blue-300'
-                    : 'text-blue-600 dark:text-blue-400'
+                    ? 'text-amber-300'
+                    : ''
                 }`}
               >
                 {item.name}
                 {isActiveRoute(item.href) && (
-                  <span className="absolute -bottom-1 left-0 w-full h-0.5 bg-blue-600 dark:bg-blue-400 rounded-full"></span>
+                  <span className="absolute -bottom-1 left-0 w-full h-px bg-amber-300"></span>
                 )}
               </Link>
             ))}
@@ -94,13 +94,13 @@ const Navbar = () => {
               <div className={`hidden md:flex items-center ${isRTL ? 'space-x-reverse space-x-4' : 'space-x-4'}`}>
                 <Link 
                   to="/login" 
-                  className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium transition-colors duration-300"
+                  className="brand-nav-link transition-colors duration-300"
                 >
                   {t('nav.login')}
                 </Link>
                 <Link 
                   to="/signup" 
-                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-2 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                  className="brand-nav-cta px-6 py-2 transition-all duration-300"
                 >
                   {t('nav.signup')}
                 </Link>
@@ -111,7 +111,7 @@ const Navbar = () => {
             <div className="lg:hidden">
               <button
                 onClick={toggleMobileMenu}
-                className="p-2 rounded-md text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-gray-800 transition-colors duration-300"
+                className="p-3 text-stone-100 hover:text-amber-300 hover:bg-white/10 transition-colors duration-300"
                 aria-label="Toggle mobile menu"
               >
                 {isMobileMenuOpen ? (
@@ -126,17 +126,17 @@ const Navbar = () => {
 
         {/* Mobile Navigation Menu */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden border-t border-gray-200 dark:border-gray-700">
-            <div className="px-2 pt-2 pb-3 space-y-1 bg-white dark:bg-gray-900">
+          <div className="lg:hidden border-t border-white/20">
+            <div className="px-2 pt-2 pb-3 space-y-1 bg-[#111]">
               {navigation.map((item) => (
                 <Link
                   key={item.key}
                   to={item.href}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className={`block px-3 py-2 rounded-md text-base font-medium transition-colors duration-300 ${
+                  className={`brand-nav-link block px-3 py-3 text-base transition-colors duration-300 ${
                     isActiveRoute(item.href)
-                      ? 'text-blue-800 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20'
-                      : 'text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-gray-800'
+                    ? 'text-amber-300 bg-white/10'
+                    : 'hover:bg-white/10'
                   }`}
                 >
                   {item.name}
@@ -144,9 +144,9 @@ const Navbar = () => {
               ))}
               
               {/* Mobile Controls */}
-              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="pt-4 border-t border-white/20">
                 <div className="flex items-center justify-between px-3 py-2">
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <span className="text-sm font-medium text-stone-200">
                     {t('common.settings')}
                   </span>
                   <div className="flex items-center space-x-2">
@@ -158,18 +158,18 @@ const Navbar = () => {
 
               {/* Mobile Authentication */}
               {!isLoggedIn && (
-                <div className="pt-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+                <div className="pt-4 border-t border-white/20 space-y-2">
                   <Link
                     to="/login"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="block w-full text-center px-3 py-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium transition-colors duration-300"
+                    className="brand-nav-link block w-full text-center px-3 py-3 transition-colors duration-300"
                   >
                     {t('nav.login')}
                   </Link>
                   <Link
                     to="/signup"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="block w-full text-center bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-3 py-2 rounded-xl font-medium transition-all duration-300 shadow-lg"
+                    className="brand-nav-cta block w-full text-center px-3 py-3 transition-all duration-300"
                   >
                     {t('nav.signup')}
                   </Link>

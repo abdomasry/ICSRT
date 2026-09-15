@@ -119,7 +119,7 @@ const EmailVerification = () => {
 
   if (autoVerifying) {
     return (
-      <div className={`min-h-screen bg-gradient-to-br from-blue-50 to-white flex items-center justify-center ${isRTL ? 'rtl' : 'ltr'}`}>
+      <div className={`brand-page min-h-screen flex items-center justify-center ${isRTL ? 'rtl' : 'ltr'}`}>
         <div className="max-w-md w-full mx-auto bg-white p-8 rounded-lg shadow-lg">
           <div className="text-center">
             <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
@@ -132,7 +132,7 @@ const EmailVerification = () => {
   }
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-blue-50 to-white ${isRTL ? 'rtl' : 'ltr'}`}>
+    <div className={`brand-page min-h-screen ${isRTL ? 'rtl' : 'ltr'}`}>
       {/* Navigation */}
       <nav className="bg-white shadow-lg sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4">

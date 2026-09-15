@@ -6,6 +6,7 @@ import { useLanguage } from "../context/LanguageContext";
 import FloatingContactButton from "../components/FloatingContactButton";
 import PhoneNumberInput from "../components/PhoneNumberInput";
 import { api } from "../lib/api";
+import { FaBolt, FaBullseye, FaClipboardList, FaCompass, FaFileAlt, FaGraduationCap, FaLanguage, FaLock } from 'react-icons/fa';
 
 const Services = () => {
   const { isLoggedIn, user } = useUser();
@@ -280,7 +281,7 @@ const Services = () => {
   };
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-blue-50 to-white dark:from-gray-900 dark:to-gray-800 ${isRTL ? 'rtl' : 'ltr'}`}>
+    <div className={`brand-page min-h-screen ${isRTL ? 'rtl' : 'ltr'}`}>
       {/* Navigation */}
 
       {/* Header */}
@@ -392,7 +393,7 @@ const Services = () => {
                       title: t('services.research.title'), description: t('services.research.desc')
                     }); } }}
                   >
-                    <div className="text-6xl mb-6 text-center">📝</div>
+                    <FaFileAlt aria-hidden="true" className="text-6xl mb-6 mx-auto text-blue-700 dark:text-blue-400" />
                     <h3 className="text-2xl font-bold text-blue-800 dark:text-blue-400 mb-4 text-center">
                       {t('services.research.title')}
                     </h3>
@@ -437,7 +438,7 @@ const Services = () => {
                     })}
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openServiceDetails({ title: t('services.translation.title'), description: t('services.translation.desc') }); } }}
                   >
-                    <div className="text-6xl mb-6 text-center">🌐</div>
+                    <FaLanguage aria-hidden="true" className="text-6xl mb-6 mx-auto text-blue-700 dark:text-blue-400" />
                     <h3 className="text-2xl font-bold text-blue-800 dark:text-blue-400 mb-4 text-center">
                       {t('services.translation.title')}
                     </h3>
@@ -482,7 +483,7 @@ const Services = () => {
                     })}
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openServiceDetails({ title: t('services.graduation.title'), description: t('services.graduation.desc') }); } }}
                   >
-                    <div className="text-6xl mb-6 text-center">🎓</div>
+                    <FaGraduationCap aria-hidden="true" className="text-6xl mb-6 mx-auto text-blue-700 dark:text-blue-400" />
                     <h3 className="text-2xl font-bold text-blue-800 dark:text-blue-400 mb-4 text-center">
                       {t('services.graduation.title')}
                     </h3>
@@ -527,7 +528,7 @@ const Services = () => {
                     })}
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openServiceDetails(); } }}
                   >
-                    <div className="text-6xl mb-6 text-center">📋</div>
+                    <FaClipboardList aria-hidden="true" className="text-6xl mb-6 mx-auto text-blue-700 dark:text-blue-400" />
                     <h3 className="text-2xl font-bold text-blue-800 dark:text-blue-400 mb-4 text-center">
                       {isRTL ? 'خطة البحث العلمي' : 'Research Plan Development'}
                     </h3>
@@ -572,7 +573,7 @@ const Services = () => {
                     })}
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openServiceDetails(); } }}
                   >
-                    <div className="text-6xl mb-6 text-center">🔍</div>
+                    <FaCompass aria-hidden="true" className="text-6xl mb-6 mx-auto text-blue-700 dark:text-blue-400" />
                     <h3 className="text-2xl font-bold text-blue-800 dark:text-blue-400 mb-4 text-center">
                       {isRTL ? 'إرشادات البحث العلمي' : 'Research Guidance & Support'}
                     </h3>
@@ -1022,7 +1023,7 @@ const Services = () => {
           
           <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
             <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
-              <div className="text-4xl mb-4">⚡</div>
+              <FaBolt aria-hidden="true" className="text-4xl mb-4 mx-auto text-amber-600 dark:text-amber-400" />
               <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">
                 {isRTL ? 'استجابة سريعة' : 'Quick Response'}
               </h3>
@@ -1032,7 +1033,7 @@ const Services = () => {
             </div>
             
             <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
-              <div className="text-4xl mb-4">🎯</div>
+              <FaBullseye aria-hidden="true" className="text-4xl mb-4 mx-auto text-blue-700 dark:text-blue-400" />
               <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">
                 {isRTL ? 'جودة عالية' : 'High Quality'}
               </h3>
@@ -1042,7 +1043,7 @@ const Services = () => {
             </div>
             
             <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
-              <div className="text-4xl mb-4">🔒</div>
+              <FaLock aria-hidden="true" className="text-4xl mb-4 mx-auto text-slate-700 dark:text-slate-300" />
               <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">
                 {isRTL ? 'خصوصية تامة' : 'Full Privacy'}
               </h3>

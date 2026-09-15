@@ -17,7 +17,7 @@ function InnerAppLayout({ children }: { children: React.ReactNode }) {
   const isLoginPage = pathname === '/login';
 
   if (isLoginPage) {
-    return <main className="min-h-screen bg-gray-50">{children}</main>;
+    return <main className="min-h-screen bg-[#111]">{children}</main>;
   }
 
   return (

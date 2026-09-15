@@ -1,3 +1,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root { --admin-ink:#111; --admin-panel:#222; --admin-paper:#f0ede6; --admin-sand:#c2a67d; --admin-line:rgba(255,255,255,.18); }
+  body { background:var(--admin-ink); color:#f6f3ee; }
+}
+
+@layer utilities {
+  .bg-gray-50, .bg-gray-100, .bg-slate-50, .bg-white { background-color:var(--admin-panel)!important; }
+  .bg-gradient-to-br { background-image:none!important; background-color:var(--admin-ink)!important; }
+  .text-gray-900, .text-gray-800 { color:#f6f3ee!important; }
+  .text-gray-700, .text-gray-600, .text-gray-500 { color:#c4c0b9!important; }
+  .border-gray-100, .border-gray-200, .border-gray-300 { border-color:var(--admin-line)!important; }
+  .shadow, .shadow-lg, .shadow-xl { box-shadow:none!important; }
+  .rounded-lg, .rounded-xl, .rounded-2xl { border-radius:0!important; }
+  input, textarea, select { background:var(--admin-paper)!important; color:#111!important; border-radius:0!important; }
+  button.bg-blue-600, a.bg-blue-600, .bg-gradient-to-r { background:var(--admin-sand)!important; color:#111!important; border-radius:0!important; box-shadow:none!important; }
+  h1, h2 { font-family:Impact,'Arial Narrow',Arial,sans-serif; text-transform:uppercase; letter-spacing:-.5px; }
+}

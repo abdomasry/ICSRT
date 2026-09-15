@@ -273,7 +273,7 @@ const UserTickets = () => {
   };
 
   return (
-  <div dir={isRTL ? 'rtl' : 'ltr'} className={`min-h-screen bg-gradient-to-br from-blue-50 to-white dark:from-gray-900 dark:to-gray-800 ${isRTL ? 'rtl' : 'ltr'}`}>
+  <div dir={isRTL ? 'rtl' : 'ltr'} className={`brand-page min-h-screen ${isRTL ? 'rtl' : 'ltr'}`}>
       {/* Main Content */}
       <div className="max-w-7xl mx-auto p-4 sm:p-6">
         {/* Header */}

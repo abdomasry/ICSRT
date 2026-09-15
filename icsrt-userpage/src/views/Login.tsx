@@ -66,7 +66,7 @@ const Login = () => {
   };
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-blue-50 to-white dark:from-gray-900 dark:to-gray-800 ${isRTL ? 'rtl' : 'ltr'}`}>
+    <div className={`brand-page min-h-screen ${isRTL ? 'rtl' : 'ltr'}`}>
       {/* Navigation */}
 
       <div className="max-w-md mx-auto p-6">

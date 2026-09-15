@@ -48,7 +48,7 @@ export default function UserPayments() {
 
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="brand-page min-h-screen flex items-center justify-center p-6" dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="bg-white shadow rounded-xl p-8 border border-gray-100 text-center max-w-md">
           <div className="text-4xl mb-3">🔒</div>
           <div className="text-lg font-semibold mb-2">{t('payments.loginRequired')}</div>
@@ -64,7 +64,7 @@ export default function UserPayments() {
   const current = payments.slice(start, start + pageSize);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-4 md:p-8" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="brand-page min-h-screen p-4 md:p-8" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="bg-white/80 rounded-xl border border-white/20 shadow-xl p-6 md:p-8 mb-6">
         <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">💳 {t('payments.title')}</h1>
         <p className="text-gray-600 mt-2">{t('payments.subtitle')}</p>

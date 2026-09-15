@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { useUser } from "../context/UserContext";
 import { useLanguage } from "../context/LanguageContext";
 import { api } from "../lib/api";
+import { FaCheckCircle, FaClock, FaCog, FaEye, FaFileAlt, FaHandshake, FaPauseCircle, FaShoppingBag, FaSpinner, FaTicketAlt, FaTimesCircle } from 'react-icons/fa';
 
 const UserDashboard = () => {
   const { user, isLoggedIn } = useUser();
@@ -184,31 +185,31 @@ const UserDashboard = () => {
       case 'pending':
       case 'submitted':
       case 'new':
-        return '⏳';
+        return <FaClock aria-label="Pending" />;
       case 'in-progress':
       case 'processing':
       case 'active':
       case 'working':
-        return '🔄';
+        return <FaSpinner aria-label="In progress" className="animate-spin" />;
       case 'resolved':
       case 'completed':
       case 'finished':
       case 'done':
-        return '✅';
+        return <FaCheckCircle aria-label="Completed" />;
       case 'closed':
       case 'cancelled':
       case 'rejected':
       case 'declined':
-        return '❌';
+        return <FaTimesCircle aria-label="Closed" />;
       case 'on-hold':
       case 'paused':
       case 'waiting':
-        return '⏸️';
+        return <FaPauseCircle aria-label="On hold" />;
       case 'review':
       case 'reviewing':
-        return '👀';
+        return <FaEye aria-label="Under review" />;
       default:
-        return '📋';
+        return <FaFileAlt aria-label="Status" />;
     }
   };
 
@@ -237,14 +238,14 @@ const UserDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+      <div className="brand-page min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="brand-page min-h-screen">
       {/* Main Content */}
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         {/* Welcome Section */}
@@ -262,7 +263,7 @@ const UserDashboard = () => {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
               <div className="p-2 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
-                <span className="text-2xl">🎫</span>
+                <FaTicketAlt aria-hidden="true" className="text-2xl text-amber-600" />
               </div>
               <div className={isRTL ? 'mr-4' : 'ml-4'}>
                 <p className={`text-sm font-medium text-gray-600 dark:text-gray-400 ${isRTL ? 'text-right' : 'text-left'}`}>{t('dashboard.stats.tickets')}</p>
@@ -274,7 +275,7 @@ const UserDashboard = () => {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
               <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
-                <span className="text-2xl">⚙️</span>
+                <FaCog aria-hidden="true" className="text-2xl text-amber-600" />
               </div>
               <div className={isRTL ? 'mr-4' : 'ml-4'}>
                 <p className={`text-sm font-medium text-gray-600 dark:text-gray-400 ${isRTL ? 'text-right' : 'text-left'}`}>{t('dashboard.stats.orders')}</p>
@@ -324,7 +325,7 @@ const UserDashboard = () => {
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <span className="text-4xl mb-4 block">🎫</span>
+                  <FaTicketAlt aria-hidden="true" className="text-4xl mb-4 mx-auto text-amber-600" />
                   <p className="text-gray-500 dark:text-gray-400">{t('dashboard.no.tickets')}</p>
                   <Link to="/tickets" className="text-blue-600 dark:text-blue-400 hover:underline text-sm">
                     {t('dashboard.tickets.create')}
@@ -384,7 +385,7 @@ const UserDashboard = () => {
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <span className="text-4xl mb-4 block">⚙️</span>
+                  <FaCog aria-hidden="true" className="text-4xl mb-4 mx-auto text-amber-600" />
                   <p className="text-gray-500 dark:text-gray-400">{t('dashboard.no.orders')}</p>
                   <Link to="/services" className="text-blue-600 dark:text-blue-400 hover:underline text-sm">
                     {t('services.view')}
@@ -404,7 +405,7 @@ const UserDashboard = () => {
             <div className="p-6">
               {myCollaborations.length === 0 ? (
                 <div className="text-center py-8">
-                  <span className="text-4xl mb-4 block">📝</span>
+                  <FaFileAlt aria-hidden="true" className="text-4xl mb-4 mx-auto text-amber-600" />
                   <p className="text-gray-500 dark:text-gray-400">{isRTL ? 'لا توجد طلبات بعد' : 'No submissions yet.'}</p>
                   <button onClick={() => setShowWorkWithUs(true)} className="mt-2 text-blue-600 dark:text-blue-400 hover:underline text-sm">{isRTL ? 'أرسل أول فكرة' : 'Submit your first idea'}</button>
                 </div>
@@ -443,7 +444,7 @@ const UserDashboard = () => {
   <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">            
           <Link to="/tickets" className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
             <div className="text-center">
-              <span className="text-4xl mb-4 block">🎫</span>
+              <FaTicketAlt aria-hidden="true" className="text-4xl mb-4 mx-auto text-amber-600" />
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{t('dashboard.stats.tickets')}</h3>
               <p className="text-gray-600 dark:text-gray-300 text-sm">{t('dashboard.tickets.create')}</p>
             </div>
@@ -451,7 +452,7 @@ const UserDashboard = () => {
 
           <Link to="/service-orders" className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
             <div className="text-center">
-              <span className="text-4xl mb-4 block">⚙️</span>
+              <FaCog aria-hidden="true" className="text-4xl mb-4 mx-auto text-amber-600" />
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{t('dashboard.stats.orders')}</h3>
               <p className="text-gray-600 dark:text-gray-300 text-sm">{t('dashboard.orders.view')}</p>
             </div>
@@ -459,7 +460,7 @@ const UserDashboard = () => {
 
           <Link to="/services" className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
             <div className="text-center">
-              <span className="text-4xl mb-4 block">🛍️</span>
+              <FaShoppingBag aria-hidden="true" className="text-4xl mb-4 mx-auto text-amber-600" />
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{t('nav.services')}</h3>
               <p className="text-gray-600 dark:text-gray-300 text-sm">{t('services.view')}</p>
             </div>
@@ -467,7 +468,7 @@ const UserDashboard = () => {
           {isResearcher && (
             <button onClick={() => setShowWorkWithUs(true)} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
               <div className="text-center">
-                <span className="text-4xl mb-4 block">🤝</span>
+                <FaHandshake aria-hidden="true" className="text-4xl mb-4 mx-auto text-amber-600" />
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{isRTL ? 'اعمل معنا' : 'Work With Us'}</h3>
                 <p className="text-gray-600 dark:text-gray-300 text-sm">{isRTL ? 'لديك فكرة أو مقال؟ انضم لفريقنا.' : 'Have an idea or article? Join our team.'}</p>
               </div>

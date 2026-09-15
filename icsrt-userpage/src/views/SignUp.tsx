@@ -185,7 +185,7 @@ const SignUp = () => {
   };
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900 flex items-center justify-center ${isRTL ? 'px-4 py-6' : 'p-4'} ${isRTL ? 'rtl' : 'ltr'}`}>
+    <div className={`brand-page min-h-screen flex items-center justify-center ${isRTL ? 'px-4 py-6' : 'p-4'} ${isRTL ? 'rtl' : 'ltr'}`}>
       <div className={`bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full border border-gray-100 dark:border-gray-700 ${isRTL ? 'p-6 max-w-3xl mx-4' : 'p-8 max-w-2xl'}`}>
         <div className={`text-center ${isRTL ? 'mb-6' : 'mb-8'} ${isRTL ? 'rtl' : 'ltr'}`}>
           <Link to="/" className={`text-3xl font-black text-blue-600 dark:text-blue-400 ${isRTL ? 'font-arabic' : ''}`}>

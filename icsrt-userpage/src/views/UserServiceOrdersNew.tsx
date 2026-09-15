@@ -331,7 +331,7 @@ const UserServiceOrders = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900 transition-all duration-300">
+    <div className="brand-page min-h-screen transition-all duration-300">
       {/* Modern Header with Return Navigation */}
       <div className="bg-white/80 dark:bg-gray-900/95 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">

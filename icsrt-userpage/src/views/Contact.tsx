@@ -107,7 +107,7 @@ const Contact = () => {
   }
 
   return (
-    <div className={`min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300 ${isRTL ? 'rtl' : 'ltr'}`}>
+    <div className={`brand-page min-h-screen transition-colors duration-300 ${isRTL ? 'rtl' : 'ltr'}`}>
       {/* Navigation */}
 
       {/* Main Content */}

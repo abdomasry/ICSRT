@@ -86,7 +86,7 @@ const FAQ = () => {
   };
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${
+    <div className={`brand-page min-h-screen transition-colors duration-300 ${
       isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'
     } ${isRTL ? 'rtl' : 'ltr'}`}>
       {/* Navigation */}

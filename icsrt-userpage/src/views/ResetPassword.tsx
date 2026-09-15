@@ -55,7 +55,7 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-blue-50 to-white dark:from-gray-900 dark:to-gray-800 ${isRTL ? 'rtl' : 'ltr'}`}>
+    <div className={`brand-page min-h-screen ${isRTL ? 'rtl' : 'ltr'}`}>
       <div className="max-w-md mx-auto p-6">
         <div className={`bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 ${isRTL ? 'text-right' : ''}`}>
           <h1 className="text-3xl font-extrabold text-blue-700 dark:text-blue-400 mb-2 text-center">{t('reset.title')}</h1>
